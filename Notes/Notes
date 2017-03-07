@@ -1,0 +1,75 @@
+Notes:
+- S3
+	- Notion de bucket (namespace global partagé meme si le bucket appartient à une région)
+	- Les objets (fichiers) appartiennent à un bucket bien défini
+	- Chaque objet a une clé l'identifiant
+
+- Lambda
+	- Étapes de configuration
+		- Création d'un groupe
+		- Création d'un role avec les deux policies:
+			* AWSLambdaExecute pour pouvoir exécuter les Lambdas
+			* CloudWatchLogsFullAccess pour pouvoir autoriser la lambda à générer des logs CloudWatch
+		- Création d'un user IAM dans le groupe créé précédemment
+
+	- Étape de création des fonctions Lambdas
+		- Création d'un "Deployment package": jar ou zip contenant la logique de la fonction lambda, typiquement créé avec maven si l'environnement d'éxecution choisi est java
+		- Déploiement du deployment package tout en spécifiant le handler de la lambda (la classe qui définit la logique à exécuter en cas de déclenchement d'un évènement S3)
+
+	- Configuration de l'événement déclencheur au niveau de la bucket même: plusieurs types d'évenement sont pris en charge (Création et Suppression)
+
+- EC2
+	- AMIs (backed by ebs volumes or backed by instance store)
+	- CRUD d'instances
+	- Création de clés
+	- Groupes / Règles de sécurité
+	- Instance store volumes(utilisés pour des données temporaires) vs S3 ou EBS (pour ne pas perdre les données lors de l'arret d'une instance)
+	- Stopping vs terminating instances
+	- Regions complètement séparées contenant des Availability zones connectées par des liens low-latency
+	- On peut utiliser une réplication au niveau de régions mais il faut crypter les données qui transitent entre les instances. Il faut également faire attentions au coûts de transfert de données
+	- Utilisation d'adresses ip élastiques pour masquer l'echec d'une instance (Remapper l'adresse élastique à une autre instance dans une autre zone de disponibilité)
+
+- EMR
+    - Création de cluster (Choix de la stack, configuration hardware, paire de clés, groupes de sécurité automatiquement créés)
+    - SSH au master à partir d'un bastion et lancement d'un job spark (Exemple SparkPi): Selon les logs, tout va bien :P
+    - Accès aux interfaces web des frameworks installés sur les instances
+        - Création du tunnel ssh: ssh -i ~/mykeypair.pem -N -D 8157 hadoop@ec2-###-##-##-###.compute-1.amazonaws.com
+        - Configuration d'un proxy au niveau du browser : http://docs.aws.amazon.com//emr/latest/ManagementGuide/emr-connect-master-node-proxy.html
+        - On aura maintenant accès aux web uis
+
+- RDS
+    - Paramétrage granulaire des instances de base de données (Stockage, CPU, Mémoire, IOPS)
+    - Possibilité de backup automatique
+    - Haute disponibilité avec une instance principale et une instance secondaire synchrone (Multi AZ Deployment)
+    - Définition des permissions à l'aide de IAM + security groups
+    - Paramétrage des instances avec les DB parameter group
+    - Activation des options spécifiques aux "DB instance classes" à l'aide des DB Option Groups
+    - Création de read replica: RDS utilise la réplication asynchrone built-in des moteurs de bd pour faire une mise à jour asynchrone des read replicas
+    - Étapes de création d'un cluster Aurora:
+        - Création d'un vpc
+        - Création de deux subnets dans ce vpc
+        - Création d'un groupe de subnets contenant les deux subnets précédents
+        - D'ici, l'interface de la console est assez explicite
+
+Synthèse article (Best practices – AWS Lambda function)
+	- La taille d'unité d'infrastructure allouée à la lambda est défini manuellement: RAM allouée
+	- La taille du CPU allouée est proportionnelle à la taille de ram allouée
+	- Types d'invocation des lambdas
+		* Asynchrones / streaming: dans le cas d'évenements Kinesis / DynamoDB, le nombre de lambdas en execution concurrent est proportionnels au nombre de shards des streams(Je ne sais pas encore de quoi il s'agit) 
+		* Synchrones
+
+		Formule générale pour estimer le nombre de lambdas concurrentes:
+			Concurrent Invocations = events (or requests) per second * function duration (in secs)
+
+	- Best practices de la configuration des lambdas
+		- Choix du timeout correct: exemple pratique dans l'article
+		- Choix de la mémoire allouée :
+			- On peut tester combien de ram max une lambda consomme, cela peut nous faire penser qu'il suffit de fournir à la lambda le minimum de ram dont elle a besoin, mais comme expliqué précédemment le cpu alloué est proportionnel à la quantité de ram allouée. Si on choisit le minimum de ram on peut augmenter la latence de la lambda.
+	- Best practices pour coder les lambdas
+		- Low startup time: Éviter l'approche traditionnelle qui consiste à lancer les processus lents au lancement des vms. Éviter l'utilisation de base de données relationnelles et utiliser des dbs non relationnelles comme ElasticSearch, mongo, redis etc...
+		- Les lambdas ne doivent pas dépendre d'un état stocké en local puisque l'infra allouée est éphémère.
+		On peut utiliser ElastiCache si on a besoin de cache ...
+	Considérations pour la performance:
+		- Réutiliser les connections externes
+		- Apparemment les lambdas ont accès à 500mbs de stockage disponible dans le répertoire /tmp qu'on peut utilise (Pas encore compris la suite de ce point)
+		- On garde que des petits trucs en mémoire
