@@ -15,6 +15,6 @@ sudo apt install maven
 3. Deploy lambda
 
 ```
-cd lambdaexperimentation/terraform
+cd terraform
 ./deploy.sh
 ```
