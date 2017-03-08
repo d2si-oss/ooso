@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>d2si.onahyl.lambda-experimentation</groupId>
-    <artifactId>lambda-experimentation</artifactId>
+    <groupId>lambda-s3</groupId>
+    <artifactId>lambda-s3</artifactId>
     <packaging>jar</packaging>
     <version>0.1</version>
 
@@ -34,7 +34,7 @@
     </dependencies>
 
     <build>
-        <finalName>lambda</finalName>
+        <finalName>lambda-s3</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

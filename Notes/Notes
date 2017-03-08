@@ -51,6 +51,25 @@ Notes:
         - Création d'un groupe de subnets contenant les deux subnets précédents
         - D'ici, l'interface de la console est assez explicite
 
+- DynamoDB
+    - Création/suppression d'une table
+    - Utilisation de clé de partition (Partition Key) pour distribuer les données en plusieurs partitions pour une meilleure scalabilité.
+    - On peut utiliser des clés de tri (Sort Key) qui permettent des requêtes riches (== ,<,>, begins with, etc ... )
+    - Les sort keys permettent la création de relation on-to-many
+    - Les sort keys définissent aussi l'ordre dans lequel les éléments sont ajoutés dans une partition
+    - Possibilité de création d'index qui sont en gros des sort keys alternatifs. Pour plus de détails: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LSI.html
+    - Possibilité de configuration de capacité en terme de lectures et écritures, et en arrière plan, DynamoDB s'occupe de l'allocation de ressources pour atteindre cette bande passante.
+    - Les données sont stockées sur SSD et sont répliquées sur 3 availability zones
+    - Création/suppression/mise à jour d'items
+    - Utilisation d'un quorum de 2 pour commit les données insérées
+    - Consistence éventuelle par défaut pour les reads (lecture à partir d'un seul réplica) avec possibilité de forte consistence en cas de besoin
+    - Chaque item ne peut pas dépasser 400ko
+    - Possibilité de tri(Ascendant ou descendant) selon les sort keys configurés
+    - Possibilité d'export de données en CSV
+    - Des SDKs pour beaucoup de langages existent
+    - Références
+        - https://youtu.be/QcFhAwn8Gyg
+
 Synthèse article (Best practices – AWS Lambda function)
 	- La taille d'unité d'infrastructure allouée à la lambda est défini manuellement: RAM allouée
 	- La taille du CPU allouée est proportionnelle à la taille de ram allouée

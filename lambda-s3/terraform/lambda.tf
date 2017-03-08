@@ -38,11 +38,11 @@ resource "aws_iam_policy_attachment" "execute-lambda-attachment" {
 }
 
 resource "aws_lambda_function" "unzipFunction" {
-  filename = "../target/lambda.jar"
+  filename = "../target/lambda-s3.jar"
   function_name = "unzipFunction"
   role = "${aws_iam_role.iam_for_lambda.arn}"
   handler = "bzipDecompressionLambda.DecompressZipedFile"
-  source_code_hash = "${base64sha256(file("../target/lambda.jar"))}"
+  source_code_hash = "${base64sha256(file("../target/lambda-s3.jar"))}"
   runtime = "java8"
   memory_size = "512"
   timeout = "5"
