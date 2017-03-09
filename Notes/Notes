@@ -70,6 +70,16 @@ Notes:
     - Références
         - https://youtu.be/QcFhAwn8Gyg
 
+- Kinesis
+    - Notion de producteur et consommateur (un peu comme dans kafka)
+    - Shards: Groupement de records par partition key. Un hash de la clé de partition est calculé lors de l'écriture d'un enregistrement pour savoir dans quelle shard l'enregistrement va être inséré.
+    - Chaque shard supporte jusqu'à 5 transactions/s de read avec une bande passante maximum de 2mb/s (Plusieurs consommateurs peuvent lire d'un shard de façon concurrente)
+    - Chaque shard supporte jusqu'à 1000 transaction d'écriture/s avec une bande passante maximum de 1mb/s
+    - Une des bonnes pratiques est d'augmenter le nombre de shards au fur et à mesure que l'utilisation des streams augmente, et de générer de manière aléatoire les partition keys pour une bonne distribution de donnés sur les shards
+    - Explications sur le resharding http://docs.aws.amazon.com/streams/latest/dev/kinesis-using-sdk-java-resharding-strategies.html
+    - Références
+        - Bonnes pratiques + use case intéressent: https://www.slideshare.net/AmazonWebServices/bdt403-best-practices-for-building-realtime-streaming-applications-with-amazon-kinesis
+
 Synthèse article (Best practices – AWS Lambda function)
 	- La taille d'unité d'infrastructure allouée à la lambda est défini manuellement: RAM allouée
 	- La taille du CPU allouée est proportionnelle à la taille de ram allouée
