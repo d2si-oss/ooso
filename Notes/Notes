@@ -80,6 +80,12 @@ Notes:
     - Références
         - Bonnes pratiques + use case intéressent: https://www.slideshare.net/AmazonWebServices/bdt403-best-practices-for-building-realtime-streaming-applications-with-amazon-kinesis
 
+- VPC
+    - Création de VPC
+    - Création de Subnet
+    - Création d'Internet Gateway pour permettre au subnet de communiquer avec le monde extérieur
+    - Création et association d'une route table au subnet avec une règle pour autoriser le traffic entrant/sortant du subnet
+
 Synthèse article (Best practices – AWS Lambda function)
 	- La taille d'unité d'infrastructure allouée à la lambda est défini manuellement: RAM allouée
 	- La taille du CPU allouée est proportionnelle à la taille de ram allouée

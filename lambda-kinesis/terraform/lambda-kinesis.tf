@@ -4,9 +4,6 @@ provider "aws" {
   region = "${var.region}"
 }
 
-data "aws_caller_identity" "current" {
-}
-
 resource "aws_kinesis_stream" "test_stream" {
   name = "${var.source_stream}"
   shard_count = 1
