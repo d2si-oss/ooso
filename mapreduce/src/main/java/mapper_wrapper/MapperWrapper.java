@@ -40,7 +40,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
 
     private void storeResult(MapperWrapperInfo mapperWrapperInfo, AmazonS3 s3Client, String result, String key) throws UnsupportedEncodingException {
         ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType("text/plain");
+        metadata.setContentType("application/json");
         metadata.setContentLength(result.getBytes().length);
         s3Client.putObject(mapperWrapperInfo.getOutputBucket(),
                 key + "-" + mapperWrapperInfo.getId(),
