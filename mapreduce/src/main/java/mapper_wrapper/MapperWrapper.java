@@ -18,18 +18,21 @@ import java.util.List;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
 
+    private AmazonS3 s3Client;
+    private MapperWrapperInfo mapperWrapperInfo;
+
     @Override
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
 
         try {
-            AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
+            this.s3Client = AmazonS3ClientBuilder.standard().build();
+            this.mapperWrapperInfo = mapperWrapperInfo;
             List<String> batch = mapperWrapperInfo.getBatch();
 
 
             for (String key : batch) {
-                String processResult = processKey(mapperWrapperInfo, s3Client, key);
-                storeResult(mapperWrapperInfo, s3Client, processResult, key);
-
+                String processResult = processKey(key);
+                storeResult(processResult, key);
             }
 
         } catch (Exception e) {
@@ -38,7 +41,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         return "OK";
     }
 
-    private void storeResult(MapperWrapperInfo mapperWrapperInfo, AmazonS3 s3Client, String result, String key) throws UnsupportedEncodingException {
+    private void storeResult(String result, String key) throws UnsupportedEncodingException {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType("application/json");
         metadata.setContentLength(result.getBytes().length);
@@ -48,7 +51,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
                 metadata);
     }
 
-    private String processKey(MapperWrapperInfo mapperWrapperInfo, AmazonS3 s3Client, String key) throws IOException {
+    private String processKey(String key) throws IOException {
         S3Object object = s3Client.getObject(mapperWrapperInfo.getInputBucket(), key);
         S3ObjectInputStream objectContentRawStream = object.getObjectContent();
         BufferedReader objectBufferedReader = new BufferedReader(new InputStreamReader(objectContentRawStream));

@@ -18,11 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Driver implements RequestHandler<DriverInfo, String> {
+    private AmazonS3 s3Client;
 
     @Override
     public String handleRequest(DriverInfo driverInfo, Context context) {
-        AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
-        List<List<String>> batches = getBatches(s3Client, driverInfo.getJobInputBucket(), driverInfo.getMapperMemory());
+        this.s3Client = AmazonS3ClientBuilder.standard().build();
+        List<List<String>> batches = getBatches(driverInfo.getJobInputBucket(), driverInfo.getMapperMemory());
 
         AWSLambdaAsync lambda = AWSLambdaAsyncClientBuilder.defaultClient();
 
@@ -44,8 +45,8 @@ public class Driver implements RequestHandler<DriverInfo, String> {
         return "Ok";
     }
 
-    private static List<List<String>> getBatches(AmazonS3 s3Client, String jobInputBucket, int mapperMemory) {
-        List<S3ObjectSummary> objectSummaries = getBucketObjectSummaries(s3Client, jobInputBucket);
+    private List<List<String>> getBatches(String jobInputBucket, int mapperMemory) {
+        List<S3ObjectSummary> objectSummaries = getBucketObjectSummaries(jobInputBucket);
         int batchSize = getBatchSize(objectSummaries, mapperMemory);
 
         List<List<String>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
@@ -66,13 +67,13 @@ public class Driver implements RequestHandler<DriverInfo, String> {
         return batches;
     }
 
-    private static List<S3ObjectSummary> getBucketObjectSummaries(AmazonS3 s3Client, String jobInputBucket) {
+    private List<S3ObjectSummary> getBucketObjectSummaries(String jobInputBucket) {
         final ListObjectsRequest req = new ListObjectsRequest().withBucketName(jobInputBucket);
         ObjectListing objectListing = s3Client.listObjects(req);
         return objectListing.getObjectSummaries();
     }
 
-    private static int getBatchSize(List<S3ObjectSummary> objectSummaries, int mapperMemory) {
+    private int getBatchSize(List<S3ObjectSummary> objectSummaries, int mapperMemory) {
         int maxUsableMemory = (int) (0.6 * 1024 * 1024 * mapperMemory);
         long totalSize = 0;
         for (S3ObjectSummary summary : objectSummaries)
