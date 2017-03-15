@@ -1,7 +1,7 @@
 Notes:
 - S3
-	- Notion de bucket (namespace global partagé meme si le bucket appartient à une région)
-	- Les objets (fichiers) appartiennent à un bucket bien défini
+	- Notion de sourceBucket (namespace global partagé meme si le sourceBucket appartient à une région)
+	- Les objets (fichiers) appartiennent à un sourceBucket bien défini
 	- Chaque objet a une clé l'identifiant
 
 - Lambda
@@ -16,7 +16,7 @@ Notes:
 		- Création d'un "Deployment package": jar ou zip contenant la logique de la fonction lambda, typiquement créé avec maven si l'environnement d'éxecution choisi est java
 		- Déploiement du deployment package tout en spécifiant le handler de la lambda (la classe qui définit la logique à exécuter en cas de déclenchement d'un évènement S3)
 
-	- Configuration de l'événement déclencheur au niveau de la bucket même: plusieurs types d'évenement sont pris en charge (Création et Suppression)
+	- Configuration de l'événement déclencheur au niveau de la sourceBucket même: plusieurs types d'évenement sont pris en charge (Création et Suppression)
 
 - EC2
 	- AMIs (backed by ebs volumes or backed by instance store)
@@ -72,7 +72,7 @@ Notes:
 
 - Kinesis
     - Notion de producteur et consommateur (un peu comme dans kafka)
-    - Shards: Groupement de records par partition key. Un hash de la clé de partition est calculé lors de l'écriture d'un enregistrement pour savoir dans quelle shard l'enregistrement va être inséré.
+    - Shards: Groupement de records par partition sourceKey. Un hash de la clé de partition est calculé lors de l'écriture d'un enregistrement pour savoir dans quelle shard l'enregistrement va être inséré.
     - Chaque shard supporte jusqu'à 5 transactions/s de read avec une bande passante maximum de 2mb/s (Plusieurs consommateurs peuvent lire d'un shard de façon concurrente)
     - Chaque shard supporte jusqu'à 1000 transaction d'écriture/s avec une bande passante maximum de 1mb/s
     - Une des bonnes pratiques est d'augmenter le nombre de shards au fur et à mesure que l'utilisation des streams augmente, et de générer de manière aléatoire les partition keys pour une bonne distribution de donnés sur les shards
