@@ -29,14 +29,15 @@ public class Coordinator implements RequestHandler<S3Event, String> {
     @Override
     public String handleRequest(S3Event event, Context context) {
         try {
-            this.s3Client = AmazonS3ClientBuilder.standard().build();
+            this.s3Client = this.s3Client == null ? AmazonS3ClientBuilder.standard().build() : this.s3Client;
+            this.jobInfo = this.jobInfo == null ? JobInfoProvider.getJobInfo() : this.jobInfo;
             this.gson = new Gson();
-            this.jobInfo = JobInfoProvider.getJobInfo();
 
-            boolean mapComplete = checkMapComplete();
-
-            if (mapComplete)
-                s3Client.putObject(jobInfo.getStatusBucket(), MAP_DONE_MARKER, "done");
+            if (!checkFinishAlreadyMarked()) {
+                boolean mapComplete = checkMapComplete();
+                if (mapComplete)
+                    s3Client.putObject(jobInfo.getStatusBucket(), MAP_DONE_MARKER, "done");
+            }
 
             return "OK";
 
@@ -45,6 +46,10 @@ public class Coordinator implements RequestHandler<S3Event, String> {
             e.printStackTrace();
             return "KO";
         }
+    }
+
+    private boolean checkFinishAlreadyMarked() {
+        return this.s3Client.doesObjectExist(this.jobInfo.getStatusBucket(), MAP_DONE_MARKER);
     }
 
     private boolean checkMapComplete() {
