@@ -32,8 +32,8 @@ public class Driver implements RequestHandler<Void, String> {
     @Override
     public String handleRequest(Void event, Context context) {
         try {
-            this.s3Client = AmazonS3ClientBuilder.standard().build();
-            this.jobInfo = JobInfoProvider.getJobInfo();
+            this.s3Client = this.s3Client == null ? AmazonS3ClientBuilder.standard().build() : this.s3Client;
+            this.jobInfo = this.jobInfo == null ? JobInfoProvider.getJobInfo() : this.jobInfo;
             this.gson = new Gson();
 
             List<List<String>> batches = getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());

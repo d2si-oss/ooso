@@ -8,13 +8,15 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.util.StringInputStream;
-import utils.JobInfo;
 import mapper_logic.MapperLogic;
+import utils.JobInfo;
 import utils.JobInfoProvider;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.List;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
@@ -27,22 +29,43 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
 
         try {
-            this.s3Client = AmazonS3ClientBuilder.standard().build();
-            this.mapperWrapperInfo = mapperWrapperInfo;
-            this.jobInfo = JobInfoProvider.getJobInfo();
-            List<String> batch = mapperWrapperInfo.getBatch();
+            Date startTime = new Date();
 
+            this.s3Client = this.s3Client == null ? AmazonS3ClientBuilder.standard().build() : this.s3Client;
+            this.jobInfo = this.jobInfo == null ? JobInfoProvider.getJobInfo() : this.jobInfo;
+            this.mapperWrapperInfo = mapperWrapperInfo;
+            List<String> batch = mapperWrapperInfo.getBatch();
 
             for (String key : batch) {
                 String processResult = processKey(key);
                 storeResult(processResult, key);
             }
 
+            Date finishTime = new Date();
+
+            storeDuration(startTime, finishTime);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
         return "OK";
     }
+
+    private void storeDuration(Date startTime, Date finishTime) throws UnsupportedEncodingException {
+        int duration = (int) ((finishTime.getTime() - startTime.getTime()) / 1000);
+        String durationString = String.valueOf(duration);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType("text/plain");
+        metadata.setContentLength(durationString.getBytes().length);
+        this.s3Client.putObject(
+                this.jobInfo.getStatusBucket(),
+                String.valueOf(this.mapperWrapperInfo.getId()),
+                new StringInputStream(durationString),
+                metadata);
+    }
+
 
     private void storeResult(String result, String key) throws IOException {
         ObjectMetadata metadata = new ObjectMetadata();
