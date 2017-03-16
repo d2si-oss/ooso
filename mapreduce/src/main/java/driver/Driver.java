@@ -8,32 +8,35 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.StringInputStream;
 import com.google.gson.Gson;
 import mapper_wrapper.MapperWrapperInfo;
+import utils.JobInfo;
+import utils.JobInfoProvider;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Driver implements RequestHandler<DriverInfo, String> {
+public class Driver implements RequestHandler<JobInfo, String> {
     private AmazonS3 s3Client;
-    private DriverInfo driverInfo;
+    private JobInfo jobInfo;
     private Gson gson;
 
     @Override
-    public String handleRequest(DriverInfo driverInfo, Context context) {
+    public String handleRequest(JobInfo jobInfo, Context context) {
         try {
             this.s3Client = AmazonS3ClientBuilder.standard().build();
-            this.driverInfo = driverInfo;
+            this.jobInfo = JobInfoProvider.getJobInfo();
             this.gson = new Gson();
 
-            List<List<String>> batches = getBatches(driverInfo.getJobInputBucket(), driverInfo.getMapperMemory());
+            List<List<String>> batches = getBatches(jobInfo.getJobInputBucket(), jobInfo.getMapperMemory());
 
             AWSLambdaAsync lambda = AWSLambdaAsyncClientBuilder.defaultClient();
 
@@ -42,7 +45,7 @@ public class Driver implements RequestHandler<DriverInfo, String> {
             Map<Long, Integer> batchSizePerMapper = new HashMap<>(batches.size());
 
             for (List<String> batch : batches) {
-                MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, driverInfo.getJobInputBucket(), driverInfo.getMapperOutputBucket(), currentMapperId);
+                MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId);
 
                 String payload = this.gson.toJson(mapperWrapperInfo);
 
@@ -57,7 +60,7 @@ public class Driver implements RequestHandler<DriverInfo, String> {
 
             }
 
-            updateJobInfo(batches.size(), batchSizePerMapper);
+            updateMappersInfo(batches.size(), batchSizePerMapper);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -66,18 +69,19 @@ public class Driver implements RequestHandler<DriverInfo, String> {
         return "Ok";
     }
 
-    private void updateJobInfo(long mapperCount, Map<Long, Integer> batchSizePerMapper) throws UnsupportedEncodingException {
-        JobInfo jobInfo = new JobInfo();
-        jobInfo.setMapperCount(mapperCount);
-        jobInfo.setBatchCountPerMapper(batchSizePerMapper);
-        String jobInfoJson = this.gson.toJson(jobInfo);
+    private void updateMappersInfo(long mapperCount, Map<Long, Integer> batchSizePerMapper) throws IOException {
+        MappersInfo mappersInfo = new MappersInfo();
+        mappersInfo.setMapperCount(mapperCount);
+        mappersInfo.setBatchCountPerMapper(batchSizePerMapper);
+
+        String jobInfoJson = this.gson.toJson(mappersInfo);
 
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType("application/json");
         metadata.setContentLength(jobInfoJson.getBytes().length);
 
-        this.s3Client.putObject(this.driverInfo.getStatusBucket(),
-                this.driverInfo.getJobInfoName(),
+        this.s3Client.putObject(this.jobInfo.getStatusBucket(),
+                this.jobInfo.getMappersInfoName(),
                 new StringInputStream(jobInfoJson),
                 metadata);
     }

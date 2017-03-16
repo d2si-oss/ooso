@@ -8,18 +8,20 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.util.StringInputStream;
+import utils.JobInfo;
 import mapper_logic.MapperLogic;
+import utils.JobInfoProvider;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
 
     private AmazonS3 s3Client;
     private MapperWrapperInfo mapperWrapperInfo;
+    private JobInfo jobInfo;
 
     @Override
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
@@ -27,6 +29,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         try {
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.mapperWrapperInfo = mapperWrapperInfo;
+            this.jobInfo = JobInfoProvider.getJobInfo();
             List<String> batch = mapperWrapperInfo.getBatch();
 
 
@@ -41,21 +44,20 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         return "OK";
     }
 
-    private void storeResult(String result, String key) throws UnsupportedEncodingException {
+    private void storeResult(String result, String key) throws IOException {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType("application/json");
         metadata.setContentLength(result.getBytes().length);
-        s3Client.putObject(mapperWrapperInfo.getOutputBucket(),
+        s3Client.putObject(this.jobInfo.getMapperOutputBucket(),
                 key + "-" + mapperWrapperInfo.getId(),
                 new StringInputStream(result),
                 metadata);
     }
 
     private String processKey(String key) throws IOException {
-        S3Object object = s3Client.getObject(mapperWrapperInfo.getInputBucket(), key);
+        S3Object object = s3Client.getObject(this.jobInfo.getJobInputBucket(), key);
         S3ObjectInputStream objectContentRawStream = object.getObjectContent();
         BufferedReader objectBufferedReader = new BufferedReader(new InputStreamReader(objectContentRawStream));
-
 
         String result = MapperLogic.mapResultCalculator(objectBufferedReader);
 

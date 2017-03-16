@@ -1,20 +1,20 @@
-package driver;
+package utils;
 
-public class DriverInfo {
+public class JobInfo {
     private String jobInputBucket;
     private String mapperOutputBucket;
     private String statusBucket;
-    private String jobInfoName;
+    private String mappersInfoName;
     private int mapperMemory;
 
-    public DriverInfo() {
+    public JobInfo() {
     }
 
-    public DriverInfo(String jobInputBucket, String mapperOutputBucket, String statusBucket, String jobInfoName, int mapperMemory) {
+    public JobInfo(String jobInputBucket, String mapperOutputBucket, String statusBucket, String mappersInfoName, int mapperMemory) {
         this.jobInputBucket = jobInputBucket;
         this.mapperOutputBucket = mapperOutputBucket;
         this.statusBucket = statusBucket;
-        this.jobInfoName = jobInfoName;
+        this.mappersInfoName = mappersInfoName;
         this.mapperMemory = mapperMemory;
     }
 
@@ -50,11 +50,11 @@ public class DriverInfo {
         this.statusBucket = statusBucket;
     }
 
-    public String getJobInfoName() {
-        return jobInfoName;
+    public String getMappersInfoName() {
+        return mappersInfoName;
     }
 
-    public void setJobInfoName(String jobInfoName) {
-        this.jobInfoName = jobInfoName;
+    public void setMappersInfoName(String mappersInfoName) {
+        this.mappersInfoName = mappersInfoName;
     }
 }

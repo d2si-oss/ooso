@@ -2,14 +2,14 @@ package driver;
 
 import java.util.Map;
 
-public class JobInfo {
+public class MappersInfo {
     private long mapperCount;
     private Map<Long, Integer> batchCountPerMapper;
 
-    public JobInfo() {
+    public MappersInfo() {
     }
 
-    public JobInfo(long mapperCount, Map<Long, Integer> batchCountPerMapper) {
+    public MappersInfo(long mapperCount, Map<Long, Integer> batchCountPerMapper) {
         this.mapperCount = mapperCount;
         this.batchCountPerMapper = batchCountPerMapper;
     }
