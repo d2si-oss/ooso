@@ -24,25 +24,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Driver implements RequestHandler<JobInfo, String> {
+public class Driver implements RequestHandler<Void, String> {
     private AmazonS3 s3Client;
     private JobInfo jobInfo;
     private Gson gson;
 
     @Override
-    public String handleRequest(JobInfo jobInfo, Context context) {
+    public String handleRequest(Void event, Context context) {
         try {
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.jobInfo = JobInfoProvider.getJobInfo();
             this.gson = new Gson();
 
-            List<List<String>> batches = getBatches(jobInfo.getJobInputBucket(), jobInfo.getMapperMemory());
+            List<List<String>> batches = getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());
 
             AWSLambdaAsync lambda = AWSLambdaAsyncClientBuilder.defaultClient();
 
-            long currentMapperId = 0;
+            int currentMapperId = 0;
 
-            Map<Long, Integer> batchSizePerMapper = new HashMap<>(batches.size());
+            Map<Integer, Integer> batchSizePerMapper = new HashMap<>(batches.size());
 
             for (List<String> batch : batches) {
                 MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId);
@@ -69,7 +69,7 @@ public class Driver implements RequestHandler<JobInfo, String> {
         return "Ok";
     }
 
-    private void updateMappersInfo(long mapperCount, Map<Long, Integer> batchSizePerMapper) throws IOException {
+    private void updateMappersInfo(int mapperCount, Map<Integer, Integer> batchSizePerMapper) throws IOException {
         MappersInfo mappersInfo = new MappersInfo();
         mappersInfo.setMapperCount(mapperCount);
         mappersInfo.setBatchCountPerMapper(batchSizePerMapper);
