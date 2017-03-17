@@ -8,11 +8,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.util.StringInputStream;
 import com.google.gson.Gson;
 import mapper_wrapper.MapperWrapperInfo;
 import utils.Commons;
@@ -77,14 +73,10 @@ public class Driver implements RequestHandler<Void, String> {
 
         String jobInfoJson = this.gson.toJson(mappersInfo);
 
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType("application/json");
-        metadata.setContentLength(jobInfoJson.getBytes().length);
-
-        this.s3Client.putObject(this.jobInfo.getStatusBucket(),
-                this.jobInfo.getMappersInfoName(),
-                new StringInputStream(jobInfoJson),
-                metadata);
+        Commons.storeObject(this.s3Client,
+                "application/json",
+                jobInfoJson, this.jobInfo.getStatusBucket(),
+                this.jobInfo.getMappersInfoName());
     }
 
 

@@ -38,6 +38,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
 
             if (!checkFinishAlreadyMarked()) {
                 mapOutputs = Commons.getBucketObjectSummaries(this.s3Client, this.jobInfo.getMapperOutputBucket());
+                System.out.println(mapOutputs);
                 boolean mapComplete = checkMapComplete(mapOutputs);
                 if (mapComplete)
                     s3Client.putObject(jobInfo.getStatusBucket(), MAP_DONE_MARKER, "done");
