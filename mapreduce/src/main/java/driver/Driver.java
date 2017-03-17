@@ -15,6 +15,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.StringInputStream;
 import com.google.gson.Gson;
 import mapper_wrapper.MapperWrapperInfo;
+import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
 
@@ -88,8 +89,8 @@ public class Driver implements RequestHandler<Void, String> {
 
 
     private List<List<String>> getBatches(String jobInputBucket, int mapperMemory) {
-        List<S3ObjectSummary> objectSummaries = getBucketObjectSummaries(jobInputBucket);
-        int batchSize = getBatchSize(objectSummaries, mapperMemory);
+        List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(this.s3Client, jobInputBucket);
+        int batchSize = Commons.getBatchSize(objectSummaries, mapperMemory);
 
         List<List<String>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
         List<String> batch = new ArrayList<>(batchSize);
@@ -109,18 +110,4 @@ public class Driver implements RequestHandler<Void, String> {
         return batches;
     }
 
-    private List<S3ObjectSummary> getBucketObjectSummaries(String jobInputBucket) {
-        final ListObjectsRequest req = new ListObjectsRequest().withBucketName(jobInputBucket);
-        ObjectListing objectListing = s3Client.listObjects(req);
-        return objectListing.getObjectSummaries();
-    }
-
-    private int getBatchSize(List<S3ObjectSummary> objectSummaries, int mapperMemory) {
-        int maxUsableMemory = (int) (0.6 * 1024 * 1024 * mapperMemory);
-        long totalSize = 0;
-        for (S3ObjectSummary summary : objectSummaries)
-            totalSize += summary.getSize();
-        double averageSize = totalSize / objectSummaries.size();
-        return (int) (maxUsableMemory / averageSize);
-    }
 }

@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
 import com.google.gson.Gson;
 import driver.MappersInfo;
+import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
 
@@ -33,8 +34,11 @@ public class Coordinator implements RequestHandler<S3Event, String> {
             this.jobInfo = this.jobInfo == null ? JobInfoProvider.getJobInfo() : this.jobInfo;
             this.gson = new Gson();
 
+            List<S3ObjectSummary> mapOutputs;
+
             if (!checkFinishAlreadyMarked()) {
-                boolean mapComplete = checkMapComplete();
+                mapOutputs = Commons.getBucketObjectSummaries(this.s3Client, this.jobInfo.getMapperOutputBucket());
+                boolean mapComplete = checkMapComplete(mapOutputs);
                 if (mapComplete)
                     s3Client.putObject(jobInfo.getStatusBucket(), MAP_DONE_MARKER, "done");
             }
@@ -52,10 +56,8 @@ public class Coordinator implements RequestHandler<S3Event, String> {
         return this.s3Client.doesObjectExist(this.jobInfo.getStatusBucket(), MAP_DONE_MARKER);
     }
 
-    private boolean checkMapComplete() {
+    private boolean checkMapComplete(List<S3ObjectSummary> currentMapOutputs) {
         MappersInfo mappersInfo = getMappersInfo();
-        List<S3ObjectSummary> currentMapOutputs = getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket());
-
         Map<Integer, Integer> currentMapProgress = currentMapOutputs.parallelStream()
                 .map(s3ObjectSummary -> {
                     String key = s3ObjectSummary.getKey();
@@ -65,13 +67,6 @@ public class Coordinator implements RequestHandler<S3Event, String> {
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.summingInt(e -> 1)));
 
         return currentMapProgress.equals(mappersInfo.getBatchCountPerMapper());
-    }
-
-    //todo refactor this, a similar method exists elsewhere
-    private List<S3ObjectSummary> getBucketObjectSummaries(String mapperOutputBucket) {
-        final ListObjectsRequest req = new ListObjectsRequest().withBucketName(mapperOutputBucket);
-        ObjectListing objectListing = s3Client.listObjects(req);
-        return objectListing.getObjectSummaries();
     }
 
     private MappersInfo getMappersInfo() {
