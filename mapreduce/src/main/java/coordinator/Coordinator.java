@@ -95,7 +95,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
                         reduceStep == 0 ? "" : (reduceStep - 1) + "-");
 
         if (reduceStep == 0) {
-            int filesToProcess = batches.parallelStream()
+            int filesToProcess = batches.stream()
                     .map(List::size)
                     .reduce((s1, s2) -> s1 + s2)
                     .get();
@@ -134,7 +134,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
     private boolean checkMapComplete() {
         List<S3ObjectSummary> currentMapOutputs = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket());
         MappersInfo mappersInfo = getMappersInfo();
-        Map<Integer, Integer> currentMapProgress = currentMapOutputs.parallelStream()
+        Map<Integer, Integer> currentMapProgress = currentMapOutputs.stream()
                 .map(s3ObjectSummary -> {
                     String key = s3ObjectSummary.getKey();
                     String mapperIdRaw = key.substring(key.lastIndexOf("-") + 1, key.length());

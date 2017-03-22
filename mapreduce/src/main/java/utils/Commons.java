@@ -63,9 +63,9 @@ public class Commons {
                 metadata);
     }
 
-    public static List<List<Map<String, String>>> getBatches(String bucket, int mapperMemory, String prefix) {
+    public static List<List<Map<String, String>>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
         List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
-        int batchSize = Commons.getBatchSize(objectSummaries, mapperMemory);
+        int batchSize = desiredBatchSize == -1 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
 
         List<List<Map<String, String>>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
         List<Map<String, String>> batch = new ArrayList<>(batchSize);
@@ -90,8 +90,16 @@ public class Commons {
         return batches;
     }
 
-    public static List<List<Map<String, String>>> getBatches(String bucket, int mapperMemory) {
-        return getBatches(bucket, mapperMemory, "");
+    public static List<List<Map<String, String>>> getBatches(String bucket, int memory) {
+        return getBatches(bucket, memory, "", -1);
+    }
+
+    public static List<List<Map<String, String>>> getBatches(String bucket, int memory, String prefix) {
+        return getBatches(bucket, memory, prefix, -1);
+    }
+
+    public static List<List<Map<String, String>>> getBatches(String bucket, int memory, int desiredBatchSize) {
+        return getBatches(bucket, memory, "", desiredBatchSize);
     }
 
     private static S3Object getObjectWithRetries(String bucket, String key, int retries) throws InterruptedException {
