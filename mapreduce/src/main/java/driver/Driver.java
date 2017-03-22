@@ -1,8 +1,10 @@
 package driver;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
-import com.amazonaws.services.dynamodbv2.model.DeleteTableResult;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.lambda.AWSLambdaAsync;
 import com.amazonaws.services.lambda.AWSLambdaAsyncClientBuilder;
 import com.amazonaws.services.lambda.model.InvocationType;
@@ -101,6 +103,14 @@ public class Driver implements RequestHandler<Void, String> {
         for (S3ObjectSummary object : reduceOutput)
             this.s3Client.deleteObject(object.getBucketName(), object.getKey());
 
+
+        Table statusTable = StatusTableProvider.getStatusTable();
+
+        ItemCollection<ScanOutcome> scan = statusTable.scan(new ScanSpec());
+
+        for (Item item : scan) {
+            statusTable.deleteItem("step",item.getInt("step"));
+        }
 
     }
 
