@@ -1,0 +1,12 @@
+{
+  "jobInputBucket": "big-dataset",
+  "mapperOutputBucket": "big-dataset-map",
+  "reducerOutputBucket": "big-dataset-reduce",
+  "statusBucket": "mapreduce-status-bucket",
+  "mappersInfoName": "mappers_info.json",
+  "reducersInfoName": "reducers_info.json",
+  "mapperFunctionName": "mapper",
+  "reducerFunctionName": "reducer",
+  "mapperMemory": 1536,
+  "reducerMemory": 1536
+}
