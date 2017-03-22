@@ -7,19 +7,23 @@ public class JobInfo {
     private String reducersInfoName;
     private String statusBucket;
     private String mappersInfoName;
+    private String mapperFunctionName;
+    private String reducerFunctionName;
     private int mapperMemory;
     private int reducerMemory;
 
     public JobInfo() {
     }
 
-    public JobInfo(String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String reducersInfoName, String statusBucket, String mappersInfoName, int mapperMemory, int reducerMemory) {
+    public JobInfo(String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String reducersInfoName, String statusBucket, String mappersInfoName, String mapperFunctionName, String reducerFunctionName, int mapperMemory, int reducerMemory) {
         this.jobInputBucket = jobInputBucket;
         this.mapperOutputBucket = mapperOutputBucket;
         this.reducerOutputBucket = reducerOutputBucket;
         this.reducersInfoName = reducersInfoName;
         this.statusBucket = statusBucket;
         this.mappersInfoName = mappersInfoName;
+        this.mapperFunctionName = mapperFunctionName;
+        this.reducerFunctionName = reducerFunctionName;
         this.mapperMemory = mapperMemory;
         this.reducerMemory = reducerMemory;
     }
@@ -86,6 +90,22 @@ public class JobInfo {
 
     public void setReducerMemory(int reducerMemory) {
         this.reducerMemory = reducerMemory;
+    }
+
+    public String getMapperFunctionName() {
+        return mapperFunctionName;
+    }
+
+    public void setMapperFunctionName(String mapperFunctionName) {
+        this.mapperFunctionName = mapperFunctionName;
+    }
+
+    public String getReducerFunctionName() {
+        return reducerFunctionName;
+    }
+
+    public void setReducerFunctionName(String reducerFunctionName) {
+        this.reducerFunctionName = reducerFunctionName;
     }
 }
 

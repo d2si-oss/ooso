@@ -1,5 +1,8 @@
 package driver;
 
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.model.DeleteTableResult;
 import com.amazonaws.services.lambda.AWSLambdaAsync;
 import com.amazonaws.services.lambda.AWSLambdaAsyncClientBuilder;
 import com.amazonaws.services.lambda.model.InvocationType;
@@ -14,9 +17,9 @@ import mapper_wrapper.MapperWrapperInfo;
 import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
+import utils.StatusTableProvider;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +32,13 @@ public class Driver implements RequestHandler<Void, String> {
     @Override
     public String handleRequest(Void event, Context context) {
         try {
-            this.s3Client = this.s3Client == null ? AmazonS3ClientBuilder.standard().build() : this.s3Client;
-            this.jobInfo = this.jobInfo == null ? JobInfoProvider.getJobInfo() : this.jobInfo;
+            this.s3Client = AmazonS3ClientBuilder.standard().build();
+            this.jobInfo = JobInfoProvider.getJobInfo();
             this.gson = new Gson();
 
-            List<List<String>> batches = getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());
+            cleanup();
+
+            List<List<Map<String, String>>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());
 
             AWSLambdaAsync lambda = AWSLambdaAsyncClientBuilder.defaultClient();
 
@@ -41,17 +46,17 @@ public class Driver implements RequestHandler<Void, String> {
 
             Map<Integer, Integer> batchSizePerMapper = new HashMap<>(batches.size());
 
-            for (List<String> batch : batches) {
+            for (List<Map<String, String>> batch : batches) {
                 MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId);
 
                 String payload = this.gson.toJson(mapperWrapperInfo);
 
                 InvokeRequest request = new InvokeRequest()
-                        .withFunctionName("mapper")
+                        .withFunctionName(this.jobInfo.getMapperFunctionName())
                         .withInvocationType(InvocationType.Event)
                         .withPayload(payload);
 
-                lambda.invokeAsync(request);
+                lambda.invoke(request);
 
                 batchSizePerMapper.put(currentMapperId++, batch.size());
 
@@ -73,33 +78,30 @@ public class Driver implements RequestHandler<Void, String> {
 
         String jobInfoJson = this.gson.toJson(mappersInfo);
 
-        Commons.storeObject(this.s3Client,
-                "application/json",
+        Commons.storeObject(Commons.JSON_TYPE,
                 jobInfoJson, this.jobInfo.getStatusBucket(),
                 this.jobInfo.getMappersInfoName());
     }
 
+    private void cleanup() {
 
-    private List<List<String>> getBatches(String jobInputBucket, int mapperMemory) {
-        List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(this.s3Client, jobInputBucket);
-        int batchSize = Commons.getBatchSize(objectSummaries, mapperMemory);
+        List<S3ObjectSummary> statusObjects = Commons.getBucketObjectSummaries(this.jobInfo.getStatusBucket());
+        List<S3ObjectSummary> mapOutput = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket());
+        List<S3ObjectSummary> reduceOutput = Commons.getBucketObjectSummaries(this.jobInfo.getReducerOutputBucket());
 
-        List<List<String>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
-        List<String> batch = new ArrayList<>(batchSize);
-        int currentBatchSize = 0;
-        for (S3ObjectSummary summary : objectSummaries) {
-            if (currentBatchSize == batchSize) {
-                batches.add(batch);
-                batch = new ArrayList<>(batchSize);
-                currentBatchSize = 0;
-            }
-            batch.add(summary.getKey());
-            currentBatchSize++;
-        }
-        if (currentBatchSize != 0)
-            batches.add(batch);
+//        Stream.concat(Stream.concat(statusObjects.stream(), mapOutput.stream()), reduceOutput.stream())
+//                .forEach(object -> this.s3Client.deleteObject(object.getBucketName(), object.getKey()));
 
-        return batches;
+        for (S3ObjectSummary object : statusObjects)
+            this.s3Client.deleteObject(object.getBucketName(), object.getKey());
+
+        for (S3ObjectSummary object : mapOutput)
+            this.s3Client.deleteObject(object.getBucketName(), object.getKey());
+
+        for (S3ObjectSummary object : reduceOutput)
+            this.s3Client.deleteObject(object.getBucketName(), object.getKey());
+
+
     }
 
 }

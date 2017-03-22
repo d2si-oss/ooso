@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import mapper_logic.MapperLogic;
 import utils.Commons;
 import utils.JobInfo;
@@ -17,6 +18,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
 
@@ -30,14 +32,14 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         try {
             Date startTime = new Date();
 
-            this.s3Client = this.s3Client == null ? AmazonS3ClientBuilder.standard().build() : this.s3Client;
-            this.jobInfo = this.jobInfo == null ? JobInfoProvider.getJobInfo() : this.jobInfo;
+            this.s3Client = AmazonS3ClientBuilder.standard().build();
+            this.jobInfo = JobInfoProvider.getJobInfo();
             this.mapperWrapperInfo = mapperWrapperInfo;
-            List<String> batch = mapperWrapperInfo.getBatch();
+            List<Map<String, String>> batch = mapperWrapperInfo.getBatch();
 
-            for (String key : batch) {
-                String processResult = processKey(key);
-                storeResult(processResult, key);
+            for (Map<String, String> object : batch) {
+                String processResult = processKey(object.get("key"));
+                storeResult(processResult, object.get("key"));
             }
 
             Date finishTime = new Date();
@@ -47,8 +49,6 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
         return "OK";
     }
 
@@ -56,8 +56,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         int duration = (int) ((finishTime.getTime() - startTime.getTime()) / 1000);
         String durationString = String.valueOf(duration);
 
-        Commons.storeObject(this.s3Client,
-                "text/plain",
+        Commons.storeObject(Commons.TEXT_TYPE,
                 durationString,
                 this.jobInfo.getStatusBucket(),
                 String.valueOf(this.mapperWrapperInfo.getId()));
@@ -66,8 +65,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
 
     private void storeResult(String result, String key) throws IOException {
 
-        Commons.storeObject(this.s3Client,
-                "application/json",
+        Commons.storeObject(Commons.JSON_TYPE,
                 result,
                 this.jobInfo.getMapperOutputBucket(),
                 key + "-" + this.mapperWrapperInfo.getId());
