@@ -5,10 +5,6 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
-import com.amazonaws.services.lambda.AWSLambdaAsync;
-import com.amazonaws.services.lambda.AWSLambdaAsyncClientBuilder;
-import com.amazonaws.services.lambda.model.InvocationType;
-import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
@@ -42,7 +38,6 @@ public class Driver implements RequestHandler<Void, String> {
 
             List<List<Map<String, String>>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());
 
-            AWSLambdaAsync lambda = AWSLambdaAsyncClientBuilder.defaultClient();
 
             int currentMapperId = 0;
 
@@ -53,12 +48,7 @@ public class Driver implements RequestHandler<Void, String> {
 
                 String payload = this.gson.toJson(mapperWrapperInfo);
 
-                InvokeRequest request = new InvokeRequest()
-                        .withFunctionName(this.jobInfo.getMapperFunctionName())
-                        .withInvocationType(InvocationType.Event)
-                        .withPayload(payload);
-
-                lambda.invoke(request);
+                Commons.invokeLambdaAsync(this.jobInfo.getMapperFunctionName(),payload);
 
                 batchSizePerMapper.put(currentMapperId++, batch.size());
 

@@ -1,9 +1,5 @@
 package coordinator;
 
-import com.amazonaws.services.lambda.AWSLambdaAsync;
-import com.amazonaws.services.lambda.AWSLambdaAsyncClientBuilder;
-import com.amazonaws.services.lambda.model.InvocationType;
-import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
@@ -105,7 +101,6 @@ public class Coordinator implements RequestHandler<S3Event, String> {
             Commons.setBatchesCount(reduceStep, batches.size());
         }
 
-        AWSLambdaAsync lambda = AWSLambdaAsyncClientBuilder.defaultClient();
 
         int id = 0;
         for (List<Map<String, String>> batch : batches) {
@@ -113,12 +108,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
 
             String payload = this.gson.toJson(reducerWrapperInfo);
 
-            InvokeRequest request = new InvokeRequest()
-                    .withFunctionName(this.jobInfo.getReducerFunctionName())
-                    .withInvocationType(InvocationType.Event)
-                    .withPayload(payload);
-
-            lambda.invoke(request);
+            Commons.invokeLambdaAsync(this.jobInfo.getReducerFunctionName(), payload);
         }
     }
 

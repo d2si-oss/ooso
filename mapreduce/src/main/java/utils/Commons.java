@@ -5,6 +5,9 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.lambda.AWSLambdaAsync;
+import com.amazonaws.services.lambda.model.InvocationType;
+import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
@@ -222,5 +225,16 @@ public class Commons {
 
         mapreduce_state.updateItem(updateItemSpec);
 
+    }
+
+    public static void invokeLambdaAsync(String function, String payload) {
+        AWSLambdaAsync lambda = AWSLambdaProvider.getInstance();
+
+        InvokeRequest request = new InvokeRequest()
+                .withFunctionName(function)
+                .withInvocationType(InvocationType.Event)
+                .withPayload(payload);
+
+        lambda.invoke(request);
     }
 }
