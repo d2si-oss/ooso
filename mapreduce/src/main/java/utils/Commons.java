@@ -16,7 +16,6 @@ import reducer_wrapper.ReducerStepInfo;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Commons {
 
@@ -106,7 +105,7 @@ public class Commons {
         AmazonS3 s3Client = AmazonS3Provider.getInstance();
 
         S3Object jobInfoS3;
-        if (retries == 0)
+        if (retries <= 0)
             jobInfoS3 = null;
         else {
             try {
