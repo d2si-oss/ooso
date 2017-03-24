@@ -12,10 +12,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.gson.Gson;
 import mapper_wrapper.MapperWrapperInfo;
-import utils.Commons;
-import utils.JobInfo;
-import utils.JobInfoProvider;
-import utils.StatusTableProvider;
+import utils.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -36,14 +33,14 @@ public class Driver implements RequestHandler<Void, String> {
 
             cleanup();
 
-            List<List<Map<String, String>>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());
+            List<List<ObjectInfoSimple>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());
 
 
             int currentMapperId = 0;
 
             Map<Integer, Integer> batchSizePerMapper = new HashMap<>(batches.size());
 
-            for (List<Map<String, String>> batch : batches) {
+            for (List<ObjectInfoSimple> batch : batches) {
                 MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId);
 
                 String payload = this.gson.toJson(mapperWrapperInfo);

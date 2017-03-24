@@ -16,6 +16,7 @@ import reducer_wrapper.ReducerWrapperInfo;
 import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
+import utils.ObjectInfoSimple;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -85,7 +86,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
     }
 
     private void launchReducers(int reduceStep) throws IOException {
-        List<List<Map<String, String>>> batches = Commons
+        List<List<ObjectInfoSimple>> batches = Commons
                 .getBatches(reduceStep == 0 ? this.jobInfo.getMapperOutputBucket() : this.jobInfo.getReducerOutputBucket(),
                         this.jobInfo.getReducerMemory(),
                         reduceStep == 0 ? "" : (reduceStep - 1) + "-");
@@ -103,7 +104,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
 
 
         int id = 0;
-        for (List<Map<String, String>> batch : batches) {
+        for (List<ObjectInfoSimple> batch : batches) {
             ReducerWrapperInfo reducerWrapperInfo = new ReducerWrapperInfo(id++, batch, reduceStep);
 
             String payload = this.gson.toJson(reducerWrapperInfo);

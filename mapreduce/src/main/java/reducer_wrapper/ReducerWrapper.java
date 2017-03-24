@@ -6,10 +6,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import reducer_logic.ReducerLogic;
-import utils.Commons;
-import utils.JobInfo;
-import utils.JobInfoProvider;
-import utils.StatusTableProvider;
+import utils.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,7 +25,7 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
             this.jobInfo = JobInfoProvider.getJobInfo();
             this.reducerWrapperInfo = reducerWrapperInfo;
 
-            List<Map<String, String>> batch = reducerWrapperInfo.getBatch();
+            List<ObjectInfoSimple> batch = reducerWrapperInfo.getBatch();
 
             String reduceResult = processBatch(batch);
 
@@ -43,7 +40,7 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
         return "OK";
     }
 
-    private String processBatch(List<Map<String, String>> batch) throws Exception {
+    private String processBatch(List<ObjectInfoSimple> batch) throws Exception {
 
         String result = ReducerLogic.reduceResultCalculator(batch);
 

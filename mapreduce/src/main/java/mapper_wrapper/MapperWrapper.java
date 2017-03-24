@@ -10,6 +10,7 @@ import mapper_logic.MapperLogic;
 import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
+import utils.ObjectInfoSimple;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,7 +18,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
 
@@ -34,11 +34,11 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.jobInfo = JobInfoProvider.getJobInfo();
             this.mapperWrapperInfo = mapperWrapperInfo;
-            List<Map<String, String>> batch = mapperWrapperInfo.getBatch();
+            List<ObjectInfoSimple> batch = mapperWrapperInfo.getBatch();
 
-            for (Map<String, String> object : batch) {
-                String processResult = processKey(object.get("key"));
-                storeResult(processResult, object.get("key"));
+            for (ObjectInfoSimple object : batch) {
+                String processResult = processKey(object.getKey());
+                storeResult(processResult, object.getKey());
             }
 
             Date finishTime = new Date();

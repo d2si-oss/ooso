@@ -15,7 +15,6 @@ import reducer_wrapper.ReducerStepInfo;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,12 +65,12 @@ public class Commons {
                 metadata);
     }
 
-    public static List<List<Map<String, String>>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
         List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
         int batchSize = desiredBatchSize == -1 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
 
-        List<List<Map<String, String>>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
-        List<Map<String, String>> batch = new ArrayList<>(batchSize);
+        List<List<ObjectInfoSimple>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
+        List<ObjectInfoSimple> batch = new ArrayList<>(batchSize);
         int currentBatchSize = 0;
         for (S3ObjectSummary summary : objectSummaries) {
             if (currentBatchSize == batchSize) {
@@ -80,9 +79,7 @@ public class Commons {
                 currentBatchSize = 0;
             }
 
-            Map<String, String> bucketAndKey = new HashMap<>(2);
-            bucketAndKey.put("bucket", summary.getBucketName());
-            bucketAndKey.put("key", summary.getKey());
+            ObjectInfoSimple bucketAndKey = new ObjectInfoSimple(summary);
 
             batch.add(bucketAndKey);
             currentBatchSize++;
@@ -93,15 +90,15 @@ public class Commons {
         return batches;
     }
 
-    public static List<List<Map<String, String>>> getBatches(String bucket, int memory) {
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory) {
         return getBatches(bucket, memory, "", -1);
     }
 
-    public static List<List<Map<String, String>>> getBatches(String bucket, int memory, String prefix) {
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix) {
         return getBatches(bucket, memory, prefix, -1);
     }
 
-    public static List<List<Map<String, String>>> getBatches(String bucket, int memory, int desiredBatchSize) {
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, int desiredBatchSize) {
         return getBatches(bucket, memory, "", desiredBatchSize);
     }
 

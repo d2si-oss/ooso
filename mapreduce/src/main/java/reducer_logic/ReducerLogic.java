@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.google.gson.Gson;
 import utils.AmazonS3Provider;
+import utils.ObjectInfoSimple;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,15 +16,15 @@ import java.util.Map;
 
 public class ReducerLogic {
 
-    public static String reduceResultCalculator(List<Map<String, String>> batch) throws IOException {
+    public static String reduceResultCalculator(List<ObjectInfoSimple> batch) throws IOException {
         Gson gson = new Gson();
 
         Map<String, Double> reduceTransactionCountPerProduct = new HashMap<>();
 
         AmazonS3 s3Client = AmazonS3Provider.getInstance();
 
-        for (Map<String, String> objectInfo : batch) {
-            S3Object object = s3Client.getObject(objectInfo.get("bucket"), objectInfo.get("key"));
+        for (ObjectInfoSimple objectInfo : batch) {
+            S3Object object = s3Client.getObject(objectInfo.getBucket(), objectInfo.getKey());
             S3ObjectInputStream objectContentRawStream = object.getObjectContent();
             BufferedReader objectBufferedReader = new BufferedReader(new InputStreamReader(objectContentRawStream));
 
