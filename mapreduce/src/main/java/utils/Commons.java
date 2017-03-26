@@ -121,12 +121,13 @@ public class Commons {
         return jobInfoS3;
     }
 
-    public static ReducerStepInfo getStepInfo(int step) {
+    public static ReducerStepInfo getStepInfo(String job, int step) {
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         GetItemSpec getItemSpec = new GetItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withConsistentRead(true);
+
 
         Item item = mapreduce_state.getItem(getItemSpec);
 
@@ -139,11 +140,11 @@ public class Commons {
         return stepInfo;
     }
 
-    public static void incrementFilesToProcess(int step, int increment) {
+    public static void incrementFilesToProcess(String job, int step, int increment) {
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set filesToProcess = filesToProcess + :ftp")
                 .withValueMap(new ValueMap()
                         .withNumber(":ftp", increment));
@@ -152,12 +153,12 @@ public class Commons {
         mapreduce_state.updateItem(updateItemSpec);
     }
 
-    public static void incrementFilesProcessed(int step, int increment) {
+    public static void incrementFilesProcessed(String job, int step, int increment) {
 
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set filesProcessed = filesProcessed + :fp")
                 .withValueMap(new ValueMap()
                         .withNumber(":fp", increment));
@@ -166,7 +167,8 @@ public class Commons {
         mapreduce_state.updateItem(updateItemSpec);
     }
 
-    public static void updateStepInfo(int step,
+    public static void updateStepInfo(String job,
+                                      int step,
                                       int filesToProcess,
                                       int filesProcessed,
                                       int batchesCount) {
@@ -175,7 +177,7 @@ public class Commons {
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set filesProcessed = :fp, filesToProcess = :ftp, batchesCount = :bc")
                 .withValueMap(new ValueMap()
                         .withNumber(":fp", filesProcessed)
@@ -187,7 +189,8 @@ public class Commons {
 
     }
 
-    public static void updateStepInfo(int step,
+    public static void updateStepInfo(String job,
+                                      int step,
                                       int filesToProcess,
                                       int filesProcessed) {
 
@@ -195,7 +198,7 @@ public class Commons {
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set filesProcessed = :fp, filesToProcess = :ftp")
                 .withValueMap(new ValueMap()
                         .withNumber(":fp", filesProcessed)
@@ -206,14 +209,15 @@ public class Commons {
 
     }
 
-    public static void setBatchesCount(int step,
+    public static void setBatchesCount(String job,
+                                       int step,
                                        int batchesCount) {
 
 
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set batchesCount = :bc")
                 .withValueMap(new ValueMap()
                         .withNumber(":bc", batchesCount));

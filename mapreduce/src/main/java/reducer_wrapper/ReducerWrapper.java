@@ -17,6 +17,8 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
     private JobInfo jobInfo;
     private ReducerWrapperInfo reducerWrapperInfo;
 
+    private String jobId;
+
     @Override
     public String handleRequest(ReducerWrapperInfo reducerWrapperInfo, Context context) {
 
@@ -24,6 +26,8 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
 
             this.jobInfo = JobInfoProvider.getJobInfo();
             this.reducerWrapperInfo = reducerWrapperInfo;
+
+            this.jobId = this.jobInfo.getJobId();
 
             List<ObjectInfoSimple> batch = reducerWrapperInfo.getBatch();
 
@@ -44,18 +48,17 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
 
         String result = ReducerLogic.reduceResultCalculator(batch);
 
-        Commons.incrementFilesProcessed(this.reducerWrapperInfo.getStep(), batch.size());
+        Commons.incrementFilesProcessed(this.jobId, this.reducerWrapperInfo.getStep(), batch.size());
 
-        if (Commons.getStepInfo(this.reducerWrapperInfo.getStep()).getBatchesCount() != 1) {
+        if (Commons.getStepInfo(this.jobId, this.reducerWrapperInfo.getStep()).getBatchesCount() != 1) {
             Table statusTable = StatusTableProvider.getStatusTable();
             Item step = statusTable.getItem(new GetItemSpec()
                     .withPrimaryKey("step", this.reducerWrapperInfo.getStep() + 1)
                     .withConsistentRead(true));
             if (step == null) {
-                Commons.updateStepInfo(this.reducerWrapperInfo.getStep() + 1, 1, 0);
-            }
-            else {
-                Commons.incrementFilesToProcess(this.reducerWrapperInfo.getStep() + 1, 1);
+                Commons.updateStepInfo(this.jobId, this.reducerWrapperInfo.getStep() + 1, 1, 0);
+            } else {
+                Commons.incrementFilesToProcess(this.jobId, this.reducerWrapperInfo.getStep() + 1, 1);
             }
 
         }

@@ -90,15 +90,6 @@ public class Driver implements RequestHandler<Void, String> {
         for (S3ObjectSummary object : reduceOutput)
             this.s3Client.deleteObject(object.getBucketName(), object.getKey());
 
-
-        Table statusTable = StatusTableProvider.getStatusTable();
-
-        ItemCollection<ScanOutcome> scan = statusTable.scan(new ScanSpec());
-
-        for (Item item : scan) {
-            statusTable.deleteItem("step",item.getInt("step"));
-        }
-
     }
 
 }

@@ -34,12 +34,16 @@ public class Coordinator implements RequestHandler<S3Event, String> {
     private Gson gson;
     private JobInfo jobInfo;
 
+    private String jobId;
+
     @Override
     public String handleRequest(S3Event event, Context context) {
         try {
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.jobInfo = JobInfoProvider.getJobInfo();
             this.gson = new Gson();
+
+            this.jobId = this.jobInfo.getJobId();
 
 
             S3EventNotification.S3Entity sourceRecord = event.getRecords().get(0).getS3();
@@ -62,7 +66,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
 
                 String currentStep = sourceKey.substring(0, sourceKey.indexOf("-"));
 
-                ReducerStepInfo stepInfo = Commons.getStepInfo(Integer.parseInt(currentStep));
+                ReducerStepInfo stepInfo = Commons.getStepInfo(this.jobId, Integer.parseInt(currentStep));
 
                 if (stepInfo.getFilesProcessed() == stepInfo.getFilesToProcess()) {
                     if (stepInfo.getBatchesCount() != 1) {
@@ -97,9 +101,9 @@ public class Coordinator implements RequestHandler<S3Event, String> {
                     .reduce((s1, s2) -> s1 + s2)
                     .get();
 
-            Commons.updateStepInfo(reduceStep, filesToProcess, 0, batches.size());
+            Commons.updateStepInfo(this.jobId, reduceStep, filesToProcess, 0, batches.size());
         } else {
-            Commons.setBatchesCount(reduceStep, batches.size());
+            Commons.setBatchesCount(this.jobId, reduceStep, batches.size());
         }
 
 

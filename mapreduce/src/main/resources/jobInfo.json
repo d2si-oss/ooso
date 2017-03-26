@@ -1,12 +1,1 @@
-{
-  "jobInputBucket": "big-dataset",
-  "mapperOutputBucket": "big-dataset-map",
-  "reducerOutputBucket": "big-dataset-reduce",
-  "statusBucket": "mapreduce-status-bucket",
-  "mappersInfoName": "mappers_info.json",
-  "reducersInfoName": "reducers_info.json",
-  "mapperFunctionName": "mapper",
-  "reducerFunctionName": "reducer",
-  "mapperMemory": 1536,
-  "reducerMemory": 1536
-}
+{"reducerFunctionName": "reducer", "reducerOutputBucket": "big-dataset-reduce", "jobInputBucket": "big-dataset", "statusTable": "mapreduce_state", "mapperMemory": 1536, "mappersInfoName": "mappers_info.json", "statusBucket": "mapreduce-status-bucket", "mapperOutputBucket": "big-dataset-map", "mapperFunctionName": "mapper", "reducerMemory": 1536, "jobId": "ef16eb6c-125b-11e7-b7e5-34f39a0a3e44"}
