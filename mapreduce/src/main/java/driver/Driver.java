@@ -1,6 +1,8 @@
 package driver;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -91,6 +93,16 @@ public class Driver implements RequestHandler<Void, String> {
 
         for (S3ObjectSummary object : reduceOutput)
             this.s3Client.deleteObject(object.getBucketName(), object.getKey());
+
+
+        Table statusTable = StatusTableProvider.getStatusTable();
+
+        ItemCollection<QueryOutcome> query = statusTable.query("job", this.jobId);
+
+        for (Item item : query) {
+            statusTable.deleteItem("job", item.getString("job"),
+                    "step", item.getInt("step"));
+        }
 
     }
 
