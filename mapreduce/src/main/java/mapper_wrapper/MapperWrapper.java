@@ -15,8 +15,6 @@ import utils.ObjectInfoSimple;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.Date;
 import java.util.List;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
@@ -29,8 +27,6 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
 
         try {
-            Date startTime = new Date();
-
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.jobInfo = JobInfoProvider.getJobInfo();
             this.mapperWrapperInfo = mapperWrapperInfo;
@@ -41,24 +37,10 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
                 storeResult(processResult, object.getKey());
             }
 
-            Date finishTime = new Date();
-
-            storeDuration(startTime, finishTime);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "OK";
-    }
-
-    private void storeDuration(Date startTime, Date finishTime) throws UnsupportedEncodingException {
-        int duration = (int) ((finishTime.getTime() - startTime.getTime()) / 1000);
-        String durationString = String.valueOf(duration);
-
-        Commons.storeObject(Commons.TEXT_TYPE,
-                durationString,
-                this.jobInfo.getStatusBucket(),
-                String.valueOf(this.mapperWrapperInfo.getId()));
     }
 
 

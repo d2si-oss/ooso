@@ -5,8 +5,6 @@ public class JobInfo {
     private String jobInputBucket;
     private String mapperOutputBucket;
     private String reducerOutputBucket;
-    private String statusBucket;
-    private String mappersInfoName;
     private String mapperFunctionName;
     private String reducerFunctionName;
     private String statusTable;
@@ -16,13 +14,11 @@ public class JobInfo {
     public JobInfo() {
     }
 
-    public JobInfo(String jobId, String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String statusBucket, String mappersInfoName, String mapperFunctionName, String reducerFunctionName, String statusTable, int mapperMemory, int reducerMemory) {
+    public JobInfo(String jobId, String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String mapperFunctionName, String reducerFunctionName, String statusTable, int mapperMemory, int reducerMemory) {
         this.jobId = jobId;
         this.jobInputBucket = jobInputBucket;
         this.mapperOutputBucket = mapperOutputBucket;
         this.reducerOutputBucket = reducerOutputBucket;
-        this.statusBucket = statusBucket;
-        this.mappersInfoName = mappersInfoName;
         this.mapperFunctionName = mapperFunctionName;
         this.reducerFunctionName = reducerFunctionName;
         this.statusTable = statusTable;
@@ -52,22 +48,6 @@ public class JobInfo {
 
     public void setMapperOutputBucket(String mapperOutputBucket) {
         this.mapperOutputBucket = mapperOutputBucket;
-    }
-
-    public String getStatusBucket() {
-        return statusBucket;
-    }
-
-    public void setStatusBucket(String statusBucket) {
-        this.statusBucket = statusBucket;
-    }
-
-    public String getMappersInfoName() {
-        return mappersInfoName;
-    }
-
-    public void setMappersInfoName(String mappersInfoName) {
-        this.mappersInfoName = mappersInfoName;
     }
 
     public String getReducerOutputBucket() {

@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.AWSLambdaAsyncClientBuilder;
 public class AWSLambdaProvider {
     private static AWSLambdaAsync client = AWSLambdaAsyncClientBuilder.defaultClient();
 
-    public static AWSLambdaAsync getInstance() {
+    public static AWSLambdaAsync getLambdaClient() {
         return client;
     }
 

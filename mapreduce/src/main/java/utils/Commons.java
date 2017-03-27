@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Commons {
+    public static final int MAP_DONE_DUMMY_STEP = -1;
+    public static final int MAP_INFO_DUMMY_STEP = -2;
 
     public final static String JSON_TYPE = "application/json";
     public final static String TEXT_TYPE = "text/plain";
@@ -30,7 +32,7 @@ public class Commons {
     }
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket, String prefix) {
-        AmazonS3 s3Client = AmazonS3Provider.getInstance();
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
 
         final ListObjectsRequest req = new ListObjectsRequest()
                 .withBucketName(bucket)
@@ -52,7 +54,7 @@ public class Commons {
                                    String content,
                                    String destBucket,
                                    String destKey) throws UnsupportedEncodingException {
-        AmazonS3 s3Client = AmazonS3Provider.getInstance();
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
 
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(contentType);
@@ -102,7 +104,7 @@ public class Commons {
     }
 
     private static S3Object getObjectWithRetries(String bucket, String key, int retries) throws InterruptedException {
-        AmazonS3 s3Client = AmazonS3Provider.getInstance();
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
 
         S3Object jobInfoS3;
         if (retries <= 0)
@@ -228,7 +230,7 @@ public class Commons {
     }
 
     public static void invokeLambdaAsync(String function, String payload) {
-        AWSLambdaAsync lambda = AWSLambdaProvider.getInstance();
+        AWSLambdaAsync lambda = AWSLambdaProvider.getLambdaClient();
 
         InvokeRequest request = new InvokeRequest()
                 .withFunctionName(function)

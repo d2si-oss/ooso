@@ -21,7 +21,7 @@ public class ReducerLogic {
 
         Map<String, Double> reduceTransactionCountPerProduct = new HashMap<>();
 
-        AmazonS3 s3Client = AmazonS3Provider.getInstance();
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
 
         for (ObjectInfoSimple objectInfo : batch) {
             S3Object object = s3Client.getObject(objectInfo.getBucket(), objectInfo.getKey());
