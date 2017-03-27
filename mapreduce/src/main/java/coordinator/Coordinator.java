@@ -63,7 +63,6 @@ public class Coordinator implements RequestHandler<S3Event, String> {
                 if (stepInfo.getFilesProcessed() == stepInfo.getFilesToProcess()) {
                     if (stepInfo.getBatchesCount() != 1) {
                         launchReducers(Integer.valueOf(currentStep) + 1);
-                        markReduceFinished();
                     }
                 }
             }
@@ -89,17 +88,6 @@ public class Coordinator implements RequestHandler<S3Event, String> {
         statusTable.putItem(item);
     }
 
-    private void markReduceFinished() {
-        Table statusTable = StatusTableProvider.getStatusTable();
-
-        Item item = new Item()
-                .withString("job", this.jobId)
-                .withNumber("step", Commons.REDUCE_DONE_DUMMY_STEP)
-                .withBoolean("reduce_done", true);
-
-        statusTable.putItem(item);
-    }
-
     private void startReducePhase() throws IOException {
         launchReducers(0);
     }
@@ -108,7 +96,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
         List<List<ObjectInfoSimple>> batches = Commons
                 .getBatches(reduceStep == 0 ? this.jobInfo.getMapperOutputBucket() : this.jobInfo.getReducerOutputBucket(),
                         this.jobInfo.getReducerMemory(),
-                        reduceStep == 0 ? "" : (reduceStep - 1) + "-");
+                        reduceStep == 0 ? this.jobId + "-" : this.jobId + "-" + (reduceStep - 1) + "-");
 
         if (reduceStep == 0) {
             int filesToProcess = batches.stream()
@@ -143,7 +131,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
     }
 
     private boolean checkMapComplete() {
-        List<S3ObjectSummary> currentMapOutputs = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket());
+        List<S3ObjectSummary> currentMapOutputs = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket(), this.jobId + "-");
         MappersInfo mappersInfo = getMappersInfo();
         Map<Integer, Integer> currentMapProgress = currentMapOutputs.stream()
                 .map(s3ObjectSummary -> {

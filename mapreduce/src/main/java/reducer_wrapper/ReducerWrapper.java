@@ -33,7 +33,7 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
             String reduceResult = processBatch(batch);
 
 
-            storeResult(reduceResult, reducerWrapperInfo.getStep() + "-reducer-" + reducerWrapperInfo.getId());
+            storeResult(reduceResult, this.jobId + "-" + reducerWrapperInfo.getStep() + "-reducer-" + reducerWrapperInfo.getId());
 
         } catch (Exception e) {
             e.printStackTrace();

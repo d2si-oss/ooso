@@ -22,6 +22,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
     private AmazonS3 s3Client;
     private MapperWrapperInfo mapperWrapperInfo;
     private JobInfo jobInfo;
+    private String jobId;
 
     @Override
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
@@ -29,6 +30,9 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         try {
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.jobInfo = JobInfoProvider.getJobInfo();
+
+            this.jobId = this.jobInfo.getJobId();
+
             this.mapperWrapperInfo = mapperWrapperInfo;
             List<ObjectInfoSimple> batch = mapperWrapperInfo.getBatch();
 
@@ -49,7 +53,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         Commons.storeObject(Commons.JSON_TYPE,
                 result,
                 this.jobInfo.getMapperOutputBucket(),
-                key + "-" + this.mapperWrapperInfo.getId());
+                this.jobId + "-" + key + "-" + this.mapperWrapperInfo.getId());
     }
 
     private String processKey(String key) throws IOException {
