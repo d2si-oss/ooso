@@ -1,10 +1,5 @@
 package driver;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
@@ -12,7 +7,10 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.gson.Gson;
 import mapper_wrapper.MapperWrapperInfo;
-import utils.*;
+import utils.Commons;
+import utils.JobInfo;
+import utils.JobInfoProvider;
+import utils.ObjectInfoSimple;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -3,7 +3,6 @@ package reducer_wrapper;
 import utils.ObjectInfoSimple;
 
 import java.util.List;
-import java.util.Map;
 
 public class ReducerWrapperInfo {
     private int id;
