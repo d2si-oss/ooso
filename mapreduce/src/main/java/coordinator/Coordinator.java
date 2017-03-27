@@ -23,7 +23,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Coordinator implements RequestHandler<S3Event, String> {
-    private static final String REDUCE_STEP_DONE_MARKER_SUFFIX = "-done";
 
     private AmazonS3 s3Client;
     private Gson gson;
@@ -64,6 +63,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
                 if (stepInfo.getFilesProcessed() == stepInfo.getFilesToProcess()) {
                     if (stepInfo.getBatchesCount() != 1) {
                         launchReducers(Integer.valueOf(currentStep) + 1);
+                        markReduceFinished();
                     }
                 }
             }
@@ -83,8 +83,19 @@ public class Coordinator implements RequestHandler<S3Event, String> {
 
         Item item = new Item()
                 .withString("job", this.jobId)
-                .withNumber("step", -1)
+                .withNumber("step", Commons.MAP_DONE_DUMMY_STEP)
                 .withBoolean("map_done", true);
+
+        statusTable.putItem(item);
+    }
+
+    private void markReduceFinished() {
+        Table statusTable = StatusTableProvider.getStatusTable();
+
+        Item item = new Item()
+                .withString("job", this.jobId)
+                .withNumber("step", Commons.REDUCE_DONE_DUMMY_STEP)
+                .withBoolean("reduce_done", true);
 
         statusTable.putItem(item);
     }

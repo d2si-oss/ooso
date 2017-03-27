@@ -20,12 +20,12 @@ import java.util.List;
 public class Commons {
     public static final int MAP_DONE_DUMMY_STEP = -1;
     public static final int MAP_INFO_DUMMY_STEP = -2;
+    public static final int REDUCE_DONE_DUMMY_STEP = -3;
+
 
     public final static String JSON_TYPE = "application/json";
     public final static String TEXT_TYPE = "text/plain";
 
-
-    private final static int TIME_TO_RETRY = 100;
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket) {
         return getBucketObjectSummaries(bucket, "");
@@ -101,26 +101,6 @@ public class Commons {
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, int desiredBatchSize) {
         return getBatches(bucket, memory, "", desiredBatchSize);
-    }
-
-    private static S3Object getObjectWithRetries(String bucket, String key, int retries) throws InterruptedException {
-        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
-
-        S3Object jobInfoS3;
-        if (retries <= 0)
-            jobInfoS3 = null;
-        else {
-            try {
-                jobInfoS3 = s3Client.getObject(bucket, key);
-            } catch (AmazonS3Exception e) {
-                if (e.getErrorCode().equals("NoSuchKey")) {
-                    Thread.sleep(TIME_TO_RETRY);
-                    return getObjectWithRetries(bucket, key, retries - 1);
-                } else
-                    throw e;
-            }
-        }
-        return jobInfoS3;
     }
 
     public static ReducerStepInfo getStepInfo(String job, int step) {
