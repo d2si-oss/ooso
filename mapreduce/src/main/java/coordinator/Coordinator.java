@@ -60,10 +60,8 @@ public class Coordinator implements RequestHandler<S3Event, String> {
 
                 ReducerStepInfo stepInfo = Commons.getStepInfo(this.jobId, Integer.parseInt(currentStep));
 
-                if (stepInfo.getFilesProcessed() == stepInfo.getFilesToProcess()) {
-                    if (stepInfo.getBatchesCount() != 1) {
-                        launchReducers(Integer.valueOf(currentStep) + 1);
-                    }
+                if (stepInfo.getFilesProcessed() == stepInfo.getFilesToProcess() && stepInfo.getBatchesCount() != 1) {
+                    launchReducers(Integer.valueOf(currentStep) + 1);
                 }
             }
 
