@@ -1,41 +1,34 @@
 package coordinator;
 
-import com.amazonaws.services.lambda.AWSLambdaAsync;
-import com.amazonaws.services.lambda.AWSLambdaAsyncClientBuilder;
-import com.amazonaws.services.lambda.model.InvocationType;
-import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.event.S3EventNotification;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.gson.Gson;
 import driver.MappersInfo;
 import reducer_wrapper.ReducerStepInfo;
 import reducer_wrapper.ReducerWrapperInfo;
-import utils.Commons;
-import utils.JobInfo;
-import utils.JobInfoProvider;
+import utils.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Coordinator implements RequestHandler<S3Event, String> {
-    private static final String MAP_DONE_MARKER = "map_done";
-    private static final String REDUCE_STEP_DONE_MARKER_SUFFIX = "-done";
 
     private AmazonS3 s3Client;
     private Gson gson;
     private JobInfo jobInfo;
+
+    private String jobId;
 
     @Override
     public String handleRequest(S3Event event, Context context) {
@@ -43,6 +36,8 @@ public class Coordinator implements RequestHandler<S3Event, String> {
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.jobInfo = JobInfoProvider.getJobInfo();
             this.gson = new Gson();
+
+            this.jobId = this.jobInfo.getJobId();
 
 
             S3EventNotification.S3Entity sourceRecord = event.getRecords().get(0).getS3();
@@ -53,9 +48,7 @@ public class Coordinator implements RequestHandler<S3Event, String> {
                 //map finish not yet detected
                 if (checkMapComplete()) {
                     if (!checkMapFinishAlreadyMarked()) {
-                        s3Client.putObject(jobInfo.getStatusBucket(),
-                                MAP_DONE_MARKER,
-                                "done");
+                        markMapFinished();
 
                         //launch first step of reducer
                         startReducePhase();
@@ -65,12 +58,10 @@ public class Coordinator implements RequestHandler<S3Event, String> {
 
                 String currentStep = sourceKey.substring(0, sourceKey.indexOf("-"));
 
-                ReducerStepInfo stepInfo = Commons.getStepInfo(Integer.parseInt(currentStep));
+                ReducerStepInfo stepInfo = Commons.getStepInfo(this.jobId, Integer.parseInt(currentStep));
 
-                if (stepInfo.getFilesProcessed() == stepInfo.getFilesToProcess()) {
-                    if (stepInfo.getBatchesCount() != 1) {
-                        launchReducers(Integer.valueOf(currentStep) + 1);
-                    }
+                if (stepInfo.getFilesProcessed() == stepInfo.getFilesToProcess() && stepInfo.getBatchesCount() != 1) {
+                    launchReducers(Integer.valueOf(currentStep) + 1);
                 }
             }
 
@@ -84,57 +75,63 @@ public class Coordinator implements RequestHandler<S3Event, String> {
         }
     }
 
+    private void markMapFinished() {
+        Table statusTable = StatusTableProvider.getStatusTable();
+
+        Item item = new Item()
+                .withString("job", this.jobId)
+                .withNumber("step", Commons.MAP_DONE_DUMMY_STEP)
+                .withBoolean("map_done", true);
+
+        statusTable.putItem(item);
+    }
+
     private void startReducePhase() throws IOException {
         launchReducers(0);
     }
 
     private void launchReducers(int reduceStep) throws IOException {
-        List<List<Map<String, String>>> batches = Commons
+        List<List<ObjectInfoSimple>> batches = Commons
                 .getBatches(reduceStep == 0 ? this.jobInfo.getMapperOutputBucket() : this.jobInfo.getReducerOutputBucket(),
                         this.jobInfo.getReducerMemory(),
-                        reduceStep == 0 ? "" : (reduceStep - 1) + "-");
+                        reduceStep == 0 ? this.jobId + "-" : this.jobId + "-" + (reduceStep - 1) + "-");
 
         if (reduceStep == 0) {
-            int filesToProcess = batches.parallelStream()
+            int filesToProcess = batches.stream()
                     .map(List::size)
                     .reduce((s1, s2) -> s1 + s2)
                     .get();
 
-            Commons.updateStepInfo(reduceStep, filesToProcess, 0, batches.size());
+            Commons.updateStepInfo(this.jobId, reduceStep, filesToProcess, 0, batches.size());
         } else {
-            Commons.setBatchesCount(reduceStep, batches.size());
+            Commons.setBatchesCount(this.jobId, reduceStep, batches.size());
         }
 
-        AWSLambdaAsync lambda = AWSLambdaAsyncClientBuilder.defaultClient();
 
         int id = 0;
-        for (List<Map<String, String>> batch : batches) {
+        for (List<ObjectInfoSimple> batch : batches) {
             ReducerWrapperInfo reducerWrapperInfo = new ReducerWrapperInfo(id++, batch, reduceStep);
 
             String payload = this.gson.toJson(reducerWrapperInfo);
 
-            InvokeRequest request = new InvokeRequest()
-                    .withFunctionName(this.jobInfo.getReducerFunctionName())
-                    .withInvocationType(InvocationType.Event)
-                    .withPayload(payload);
-
-            lambda.invoke(request);
+            Commons.invokeLambdaAsync(this.jobInfo.getReducerFunctionName(), payload);
         }
     }
 
 
     private boolean checkMapFinishAlreadyMarked() {
-        return this.s3Client.doesObjectExist(this.jobInfo.getStatusBucket(), MAP_DONE_MARKER);
-    }
+        Table statusTable = StatusTableProvider.getStatusTable();
 
-    private boolean checkReduceStepFinishAlreadyMarked(int step) {
-        return this.s3Client.doesObjectExist(this.jobInfo.getStatusBucket(), step + REDUCE_STEP_DONE_MARKER_SUFFIX);
+        Item item = statusTable.getItem(new GetItemSpec()
+                .withPrimaryKey("job", this.jobId, "step", Commons.MAP_DONE_DUMMY_STEP)
+                .withConsistentRead(true));
+        return item != null;
     }
 
     private boolean checkMapComplete() {
-        List<S3ObjectSummary> currentMapOutputs = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket());
+        List<S3ObjectSummary> currentMapOutputs = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket(), this.jobId + "-");
         MappersInfo mappersInfo = getMappersInfo();
-        Map<Integer, Integer> currentMapProgress = currentMapOutputs.parallelStream()
+        Map<Integer, Integer> currentMapProgress = currentMapOutputs.stream()
                 .map(s3ObjectSummary -> {
                     String key = s3ObjectSummary.getKey();
                     String mapperIdRaw = key.substring(key.lastIndexOf("-") + 1, key.length());
@@ -146,9 +143,11 @@ public class Coordinator implements RequestHandler<S3Event, String> {
     }
 
     private MappersInfo getMappersInfo() {
-        S3Object jobInfoS3 = s3Client.getObject(this.jobInfo.getStatusBucket(), this.jobInfo.getMappersInfoName());
-        S3ObjectInputStream objectContent = jobInfoS3.getObjectContent();
-        BufferedReader objectReader = new BufferedReader(new InputStreamReader(objectContent));
-        return this.gson.fromJson(objectReader, MappersInfo.class);
+        Table statusTable = StatusTableProvider.getStatusTable();
+
+        String mappersInfoJson = statusTable.getItem(new GetItemSpec().withPrimaryKey("job", this.jobId, "step", Commons.MAP_INFO_DUMMY_STEP))
+                .getJSON("map_info");
+
+        return this.gson.fromJson(mappersInfoJson, MappersInfo.class);
     }
 }

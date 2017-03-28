@@ -6,19 +6,17 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import reducer_logic.ReducerLogic;
-import utils.Commons;
-import utils.JobInfo;
-import utils.JobInfoProvider;
-import utils.StatusTableProvider;
+import utils.*;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String> {
 
     private JobInfo jobInfo;
     private ReducerWrapperInfo reducerWrapperInfo;
+
+    private String jobId;
 
     @Override
     public String handleRequest(ReducerWrapperInfo reducerWrapperInfo, Context context) {
@@ -28,12 +26,14 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
             this.jobInfo = JobInfoProvider.getJobInfo();
             this.reducerWrapperInfo = reducerWrapperInfo;
 
-            List<Map<String, String>> batch = reducerWrapperInfo.getBatch();
+            this.jobId = this.jobInfo.getJobId();
+
+            List<ObjectInfoSimple> batch = reducerWrapperInfo.getBatch();
 
             String reduceResult = processBatch(batch);
 
 
-            storeResult(reduceResult, reducerWrapperInfo.getStep() + "-reducer-" + reducerWrapperInfo.getId());
+            storeResult(reduceResult, this.jobId + "-" + reducerWrapperInfo.getStep() + "-reducer-" + reducerWrapperInfo.getId());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,22 +43,21 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
         return "OK";
     }
 
-    private String processBatch(List<Map<String, String>> batch) throws Exception {
+    private String processBatch(List<ObjectInfoSimple> batch) throws Exception {
 
         String result = ReducerLogic.reduceResultCalculator(batch);
 
-        Commons.incrementFilesProcessed(this.reducerWrapperInfo.getStep(), batch.size());
+        Commons.incrementFilesProcessed(this.jobId, this.reducerWrapperInfo.getStep(), batch.size());
 
-        if (Commons.getStepInfo(this.reducerWrapperInfo.getStep()).getBatchesCount() != 1) {
+        if (Commons.getStepInfo(this.jobId, this.reducerWrapperInfo.getStep()).getBatchesCount() != 1) {
             Table statusTable = StatusTableProvider.getStatusTable();
             Item step = statusTable.getItem(new GetItemSpec()
                     .withPrimaryKey("step", this.reducerWrapperInfo.getStep() + 1)
                     .withConsistentRead(true));
             if (step == null) {
-                Commons.updateStepInfo(this.reducerWrapperInfo.getStep() + 1, 1, 0);
-            }
-            else {
-                Commons.incrementFilesToProcess(this.reducerWrapperInfo.getStep() + 1, 1);
+                Commons.updateStepInfo(this.jobId, this.reducerWrapperInfo.getStep() + 1, 1, 0);
+            } else {
+                Commons.incrementFilesToProcess(this.jobId, this.reducerWrapperInfo.getStep() + 1, 1);
             }
 
         }

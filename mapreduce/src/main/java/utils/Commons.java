@@ -5,6 +5,9 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.lambda.AWSLambdaAsync;
+import com.amazonaws.services.lambda.model.InvocationType;
+import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
@@ -12,24 +15,24 @@ import reducer_wrapper.ReducerStepInfo;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Commons {
+    public static final int MAP_DONE_DUMMY_STEP = -1;
+    public static final int MAP_INFO_DUMMY_STEP = -2;
+    public static final int REDUCE_DONE_DUMMY_STEP = -3;
+
 
     public final static String JSON_TYPE = "application/json";
     public final static String TEXT_TYPE = "text/plain";
 
-
-    private final static int TIME_TO_RETRY = 100;
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket) {
         return getBucketObjectSummaries(bucket, "");
     }
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket, String prefix) {
-        AmazonS3 s3Client = AmazonS3Provider.getInstance();
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
 
         final ListObjectsRequest req = new ListObjectsRequest()
                 .withBucketName(bucket)
@@ -51,7 +54,7 @@ public class Commons {
                                    String content,
                                    String destBucket,
                                    String destKey) throws UnsupportedEncodingException {
-        AmazonS3 s3Client = AmazonS3Provider.getInstance();
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
 
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(contentType);
@@ -63,12 +66,12 @@ public class Commons {
                 metadata);
     }
 
-    public static List<List<Map<String, String>>> getBatches(String bucket, int mapperMemory, String prefix) {
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
         List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
-        int batchSize = Commons.getBatchSize(objectSummaries, mapperMemory);
+        int batchSize = desiredBatchSize == -1 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
 
-        List<List<Map<String, String>>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
-        List<Map<String, String>> batch = new ArrayList<>(batchSize);
+        List<List<ObjectInfoSimple>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
+        List<ObjectInfoSimple> batch = new ArrayList<>(batchSize);
         int currentBatchSize = 0;
         for (S3ObjectSummary summary : objectSummaries) {
             if (currentBatchSize == batchSize) {
@@ -77,9 +80,7 @@ public class Commons {
                 currentBatchSize = 0;
             }
 
-            Map<String, String> bucketAndKey = new HashMap<>(2);
-            bucketAndKey.put("bucket", summary.getBucketName());
-            bucketAndKey.put("key", summary.getKey());
+            ObjectInfoSimple bucketAndKey = new ObjectInfoSimple(summary);
 
             batch.add(bucketAndKey);
             currentBatchSize++;
@@ -90,36 +91,25 @@ public class Commons {
         return batches;
     }
 
-    public static List<List<Map<String, String>>> getBatches(String bucket, int mapperMemory) {
-        return getBatches(bucket, mapperMemory, "");
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory) {
+        return getBatches(bucket, memory, "", -1);
     }
 
-    private static S3Object getObjectWithRetries(String bucket, String key, int retries) throws InterruptedException {
-        AmazonS3 s3Client = AmazonS3Provider.getInstance();
-
-        S3Object jobInfoS3;
-        if (retries == 0)
-            jobInfoS3 = null;
-        else {
-            try {
-                jobInfoS3 = s3Client.getObject(bucket, key);
-            } catch (AmazonS3Exception e) {
-                if (e.getErrorCode().equals("NoSuchKey")) {
-                    Thread.sleep(TIME_TO_RETRY);
-                    return getObjectWithRetries(bucket, key, retries - 1);
-                } else
-                    throw e;
-            }
-        }
-        return jobInfoS3;
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix) {
+        return getBatches(bucket, memory, prefix, -1);
     }
 
-    public static ReducerStepInfo getStepInfo(int step) {
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, int desiredBatchSize) {
+        return getBatches(bucket, memory, "", desiredBatchSize);
+    }
+
+    public static ReducerStepInfo getStepInfo(String job, int step) {
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         GetItemSpec getItemSpec = new GetItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withConsistentRead(true);
+
 
         Item item = mapreduce_state.getItem(getItemSpec);
 
@@ -132,11 +122,11 @@ public class Commons {
         return stepInfo;
     }
 
-    public static void incrementFilesToProcess(int step, int increment) {
+    public static void incrementFilesToProcess(String job, int step, int increment) {
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set filesToProcess = filesToProcess + :ftp")
                 .withValueMap(new ValueMap()
                         .withNumber(":ftp", increment));
@@ -145,12 +135,12 @@ public class Commons {
         mapreduce_state.updateItem(updateItemSpec);
     }
 
-    public static void incrementFilesProcessed(int step, int increment) {
+    public static void incrementFilesProcessed(String job, int step, int increment) {
 
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set filesProcessed = filesProcessed + :fp")
                 .withValueMap(new ValueMap()
                         .withNumber(":fp", increment));
@@ -159,7 +149,8 @@ public class Commons {
         mapreduce_state.updateItem(updateItemSpec);
     }
 
-    public static void updateStepInfo(int step,
+    public static void updateStepInfo(String job,
+                                      int step,
                                       int filesToProcess,
                                       int filesProcessed,
                                       int batchesCount) {
@@ -168,7 +159,7 @@ public class Commons {
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set filesProcessed = :fp, filesToProcess = :ftp, batchesCount = :bc")
                 .withValueMap(new ValueMap()
                         .withNumber(":fp", filesProcessed)
@@ -180,7 +171,8 @@ public class Commons {
 
     }
 
-    public static void updateStepInfo(int step,
+    public static void updateStepInfo(String job,
+                                      int step,
                                       int filesToProcess,
                                       int filesProcessed) {
 
@@ -188,7 +180,7 @@ public class Commons {
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set filesProcessed = :fp, filesToProcess = :ftp")
                 .withValueMap(new ValueMap()
                         .withNumber(":fp", filesProcessed)
@@ -199,14 +191,15 @@ public class Commons {
 
     }
 
-    public static void setBatchesCount(int step,
+    public static void setBatchesCount(String job,
+                                       int step,
                                        int batchesCount) {
 
 
         Table mapreduce_state = StatusTableProvider.getStatusTable();
 
         UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("step", step)
+                .withPrimaryKey("job", job, "step", step)
                 .withUpdateExpression("set batchesCount = :bc")
                 .withValueMap(new ValueMap()
                         .withNumber(":bc", batchesCount));
@@ -214,5 +207,16 @@ public class Commons {
 
         mapreduce_state.updateItem(updateItemSpec);
 
+    }
+
+    public static void invokeLambdaAsync(String function, String payload) {
+        AWSLambdaAsync lambda = AWSLambdaProvider.getLambdaClient();
+
+        InvokeRequest request = new InvokeRequest()
+                .withFunctionName(function)
+                .withInvocationType(InvocationType.Event)
+                .withPayload(payload);
+
+        lambda.invoke(request);
     }
 }

@@ -1,27 +1,26 @@
 package mapper_wrapper;
 
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import utils.ObjectInfoSimple;
 
 import java.util.List;
-import java.util.Map;
 
 public class MapperWrapperInfo {
-    private List<Map<String, String>> batch;
+    private List<ObjectInfoSimple> batch;
     private long id;
 
     public MapperWrapperInfo() {
     }
 
-    public MapperWrapperInfo(List<Map<String, String>> batch, long id) {
+    public MapperWrapperInfo(List<ObjectInfoSimple> batch, long id) {
         this.batch = batch;
         this.id = id;
     }
 
-    public List<Map<String, String>> getBatch() {
+    public List<ObjectInfoSimple> getBatch() {
         return batch;
     }
 
-    public void setBatch(List<Map<String, String>> batch) {
+    public void setBatch(List<ObjectInfoSimple> batch) {
         this.batch = batch;
     }
 

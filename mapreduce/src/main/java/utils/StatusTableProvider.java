@@ -13,8 +13,9 @@ public class StatusTableProvider {
 
         DynamoDB dynamoDB = new DynamoDB(client);
 
+        JobInfo jobInfo = JobInfoProvider.getJobInfo();
 
-        statusTable = dynamoDB.getTable("mapreduce_state");
+        statusTable = dynamoDB.getTable(jobInfo.getStatusTable());
     }
 
     public static Table getStatusTable() {

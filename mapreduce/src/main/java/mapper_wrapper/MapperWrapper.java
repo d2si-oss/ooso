@@ -6,60 +6,45 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import mapper_logic.MapperLogic;
 import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
+import utils.ObjectInfoSimple;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
 
     private AmazonS3 s3Client;
     private MapperWrapperInfo mapperWrapperInfo;
     private JobInfo jobInfo;
+    private String jobId;
 
     @Override
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
 
         try {
-            Date startTime = new Date();
-
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.jobInfo = JobInfoProvider.getJobInfo();
+
+            this.jobId = this.jobInfo.getJobId();
+
             this.mapperWrapperInfo = mapperWrapperInfo;
-            List<Map<String, String>> batch = mapperWrapperInfo.getBatch();
+            List<ObjectInfoSimple> batch = mapperWrapperInfo.getBatch();
 
-            for (Map<String, String> object : batch) {
-                String processResult = processKey(object.get("key"));
-                storeResult(processResult, object.get("key"));
+            for (ObjectInfoSimple object : batch) {
+                String processResult = processKey(object.getKey());
+                storeResult(processResult, object.getKey());
             }
-
-            Date finishTime = new Date();
-
-            storeDuration(startTime, finishTime);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "OK";
-    }
-
-    private void storeDuration(Date startTime, Date finishTime) throws UnsupportedEncodingException {
-        int duration = (int) ((finishTime.getTime() - startTime.getTime()) / 1000);
-        String durationString = String.valueOf(duration);
-
-        Commons.storeObject(Commons.TEXT_TYPE,
-                durationString,
-                this.jobInfo.getStatusBucket(),
-                String.valueOf(this.mapperWrapperInfo.getId()));
     }
 
 
@@ -68,7 +53,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         Commons.storeObject(Commons.JSON_TYPE,
                 result,
                 this.jobInfo.getMapperOutputBucket(),
-                key + "-" + this.mapperWrapperInfo.getId());
+                this.jobId + "-" + key + "-" + this.mapperWrapperInfo.getId());
     }
 
     private String processKey(String key) throws IOException {
