@@ -47,4 +47,14 @@ public class ReducerStepInfo {
     public void setBatchesCount(int batchesCount) {
         this.batchesCount = batchesCount;
     }
+
+    @Override
+    public String toString() {
+        return "ReducerStepInfo{" +
+                "step=" + step +
+                ", filesToProcess=" + filesToProcess +
+                ", filesProcessed=" + filesProcessed +
+                ", batchesCount=" + batchesCount +
+                '}';
+    }
 }

@@ -35,7 +35,3 @@ variable "reducerFunctionName" {
 variable "mapperFunctionName" {
   default = "mapper"
 }
-
-variable "statusTable" {
-  default = "mapreduce_state"
-}

@@ -53,7 +53,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         Commons.storeObject(Commons.JSON_TYPE,
                 result,
                 this.jobInfo.getMapperOutputBucket(),
-                this.jobId + "-" + key + "-" + this.mapperWrapperInfo.getId());
+                this.jobId + "/" + key + "-" + this.mapperWrapperInfo.getId());
     }
 
     private String processKey(String key) throws IOException {
