@@ -1,5 +1,8 @@
 package utils;
 
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.lambda.AWSLambdaAsync;
 import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
@@ -10,9 +13,11 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.StringInputStream;
+import org.joda.time.DateTime;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Commons {
@@ -105,6 +110,35 @@ public class Commons {
                 .withPayload(payload);
 
         lambda.invoke(request);
+    }
+
+
+    public static void setStartDate(String job, DateTime startDate) {
+
+        Table mapreduce_state = StatusTableProvider.getStatusTable();
+
+        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+                .withPrimaryKey("job", job)
+                .withUpdateExpression("set startDate = :sd")
+                .withValueMap(new ValueMap()
+                        .withString(":sd", startDate.toString()));
+
+        mapreduce_state.updateItem(updateItemSpec);
+
+    }
+
+    public static void setFinishDate(String job, DateTime finishDate) {
+
+        Table mapreduce_state = StatusTableProvider.getStatusTable();
+
+        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+                .withPrimaryKey("job", job)
+                .withUpdateExpression("set finishDate = :fd")
+                .withValueMap(new ValueMap()
+                        .withString(":fd", finishDate.toString()));
+
+        mapreduce_state.updateItem(updateItemSpec);
+
     }
 
     public static InvokeResult invokeLambdaSync(String function, String payload) {

@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.gson.Gson;
 import coordinator.CoordinatorInfo;
 import mapper_wrapper.MapperWrapperInfo;
+import org.joda.time.DateTime;
 import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
@@ -34,6 +35,9 @@ public class Driver implements RequestHandler<Void, String> {
             this.gson = new Gson();
 
             this.jobId = this.jobInfo.getJobId();
+
+            Commons.setStartDate(this.jobId,new DateTime());
+
 
             cleanup();
 
