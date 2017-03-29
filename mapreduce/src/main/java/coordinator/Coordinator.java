@@ -49,7 +49,7 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
         List<List<ObjectInfoSimple>> batches = Commons
                 .getBatches(reduceStep == 0 ? this.jobInfo.getMapperOutputBucket() : this.jobInfo.getReducerOutputBucket(),
                         this.jobInfo.getReducerMemory(),
-                        reduceStep == 0 ? this.jobId + "/" : this.jobId + "/" + (reduceStep - 1) + "-", 2);
+                        reduceStep == 0 ? this.jobId + "/" : this.jobId + "/" + (reduceStep - 1) + "-");
 
         invokeReducers(reduceStep, batches);
 
