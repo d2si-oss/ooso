@@ -36,12 +36,12 @@ public class Driver implements RequestHandler<Void, String> {
 
             this.jobId = this.jobInfo.getJobId();
 
-            Commons.setStartDate(this.jobId,new DateTime());
+            Commons.setStartDate(this.jobId, new DateTime());
 
 
             cleanup();
 
-            List<List<ObjectInfoSimple>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());
+            List<List<ObjectInfoSimple>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory(), this.jobInfo.getMapperForceBatchSize());
 
 
             invokeMappers(batches);
