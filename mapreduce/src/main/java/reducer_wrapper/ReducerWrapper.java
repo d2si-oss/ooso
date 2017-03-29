@@ -3,10 +3,7 @@ package reducer_wrapper;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import reducer_logic.ReducerLogic;
-import utils.Commons;
-import utils.JobInfo;
-import utils.JobInfoProvider;
-import utils.ObjectInfoSimple;
+import utils.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,6 +13,7 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
     private JobInfo jobInfo;
 
     private String jobId;
+    private ReducerWrapperInfo reducerWrapperInfo;
 
     @Override
     public String handleRequest(ReducerWrapperInfo reducerWrapperInfo, Context context) {
@@ -26,12 +24,13 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
 
             this.jobId = this.jobInfo.getJobId();
 
+            this.reducerWrapperInfo = reducerWrapperInfo;
+
             List<ObjectInfoSimple> batch = reducerWrapperInfo.getBatch();
 
             String reduceResult = processBatch(batch);
 
-
-            storeResult(reduceResult, this.jobId + "/" + reducerWrapperInfo.getStep() + "-reducer-" + reducerWrapperInfo.getId());
+            storeResult(reduceResult);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -46,10 +45,10 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
     }
 
 
-    private void storeResult(String result, String key) throws IOException {
+    private void storeResult(String result) throws IOException {
         Commons.storeObject(Commons.JSON_TYPE,
                 result,
                 jobInfo.getReducerOutputBucket(),
-                key);
+                this.jobId + "/" + this.reducerWrapperInfo.getStep() + "-reducer-" + this.reducerWrapperInfo.getId());
     }
 }

@@ -5,10 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.google.gson.Gson;
 import org.joda.time.DateTime;
 import reducer_wrapper.ReducerWrapperInfo;
-import utils.Commons;
-import utils.JobInfo;
-import utils.JobInfoProvider;
-import utils.ObjectInfoSimple;
+import utils.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,6 +36,7 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
                 String payload = this.gson.toJson(nextCoordinatorInfo);
                 Commons.invokeLambdaSync("coordinator", payload);
             }
+
             Commons.setFinishDate(this.jobId, new DateTime());
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -66,7 +64,10 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
         for (List<ObjectInfoSimple> batch : batches) {
             final int finalId = id;
             executorService.submit(() -> {
-                ReducerWrapperInfo reducerWrapperInfo = new ReducerWrapperInfo(finalId, batch, reduceStep);
+                ReducerWrapperInfo reducerWrapperInfo = new ReducerWrapperInfo(
+                        finalId,
+                        batch,
+                        reduceStep);
 
                 String payload = this.gson.toJson(reducerWrapperInfo);
 

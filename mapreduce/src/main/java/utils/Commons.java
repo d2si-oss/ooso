@@ -17,7 +17,6 @@ import org.joda.time.DateTime;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Commons {
