@@ -1,13 +1,16 @@
 package utils;
 
-import com.amazonaws.services.lambda.AWSLambdaAsync;
-import com.amazonaws.services.lambda.AWSLambdaAsyncClientBuilder;
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 
 public class AWSLambdaProvider {
-    private static AWSLambdaAsync client = AWSLambdaAsyncClientBuilder.defaultClient();
 
-    public static AWSLambdaAsync getLambdaClient() {
-        return client;
+    public static AWSLambda getLambdaClient() {
+        return AWSLambdaHolder.LAMBDA_CLIENT;
+    }
+
+    private static class AWSLambdaHolder {
+        private static final AWSLambda LAMBDA_CLIENT = AWSLambdaClientBuilder.defaultClient();
     }
 
     private AWSLambdaProvider() {

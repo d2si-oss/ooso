@@ -3,7 +3,7 @@ package utils;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
-import com.amazonaws.services.lambda.AWSLambdaAsync;
+import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
@@ -101,7 +101,7 @@ public class Commons {
     }
 
     public static void invokeLambdaAsync(String function, String payload) {
-        AWSLambdaAsync lambda = AWSLambdaProvider.getLambdaClient();
+        AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
 
         InvokeRequest request = new InvokeRequest()
                 .withFunctionName(function)
@@ -141,7 +141,7 @@ public class Commons {
     }
 
     public static InvokeResult invokeLambdaSync(String function, String payload) {
-        AWSLambdaAsync lambda = AWSLambdaProvider.getLambdaClient();
+        AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
 
         InvokeRequest request = new InvokeRequest()
                 .withFunctionName(function)

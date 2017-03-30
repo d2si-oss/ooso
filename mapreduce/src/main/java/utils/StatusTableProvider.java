@@ -6,20 +6,19 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Table;
 
 public class StatusTableProvider {
-    private static Table statusTable;
 
-    static {
-        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
+    private static final class TableHolder {
+        static AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
 
-        DynamoDB dynamoDB = new DynamoDB(client);
+        static DynamoDB dynamoDB = new DynamoDB(client);
 
-        JobInfo jobInfo = JobInfoProvider.getJobInfo();
+        static JobInfo jobInfo = JobInfoProvider.getJobInfo();
 
-        statusTable = dynamoDB.getTable(jobInfo.getStatusTable());
+        private static final Table statusTable = dynamoDB.getTable(jobInfo.getStatusTable());
     }
 
     public static Table getStatusTable() {
-        return statusTable;
+        return TableHolder.statusTable;
     }
 
     private StatusTableProvider() {
