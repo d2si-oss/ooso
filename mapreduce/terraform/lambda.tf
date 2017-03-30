@@ -1,3 +1,4 @@
+//load job infrastructure info from json file
 data "external" "jobInfo" {
   program = [
     "python3",
@@ -45,13 +46,6 @@ resource "aws_iam_policy_attachment" "lambdaAccessAttachment" {
   roles = [
     "${aws_iam_role.iamForLambda.name}"]
   policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
-}
-
-resource "aws_iam_policy_attachment" "cloudwatchAccessAttachment" {
-  name = "cloudwatchAccessAttachment"
-  roles = [
-    "${aws_iam_role.iamForLambda.name}"]
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
 
 resource "aws_iam_policy_attachment" "s3AccessAttachment" {
