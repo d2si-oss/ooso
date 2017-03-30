@@ -8,13 +8,12 @@ import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
 import org.joda.time.DateTime;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -138,6 +137,15 @@ public class Commons {
 
         mapreduce_state.updateItem(updateItemSpec);
 
+    }
+
+    public static BufferedReader getReaderFromObjectInfo(ObjectInfoSimple objectInfo) {
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
+
+        S3Object object = s3Client.getObject(objectInfo.getBucket(), objectInfo.getKey());
+        S3ObjectInputStream objectContentRawStream = object.getObjectContent();
+
+        return new BufferedReader(new InputStreamReader(objectContentRawStream));
     }
 
     public static InvokeResult invokeLambdaSync(String function, String payload) {
