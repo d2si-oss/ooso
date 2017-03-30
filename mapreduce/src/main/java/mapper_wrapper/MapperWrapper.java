@@ -34,17 +34,22 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
             this.jobId = this.jobInfo.getJobId();
 
             this.mapperWrapperInfo = mapperWrapperInfo;
+
             List<ObjectInfoSimple> batch = mapperWrapperInfo.getBatch();
 
-            for (ObjectInfoSimple object : batch) {
-                String processResult = processKey(object.getKey());
-                storeResult(processResult, object.getKey());
-            }
+            processBatch(batch);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "OK";
+    }
+
+    private void processBatch(List<ObjectInfoSimple> batch) throws IOException {
+        for (ObjectInfoSimple object : batch) {
+            String processResult = processKey(object.getKey());
+            storeResult(processResult, object.getKey());
+        }
     }
 
 

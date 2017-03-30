@@ -1,3 +1,13 @@
+data "external" "jobInfo" {
+  program = [
+    "python3",
+    "${path.module}/../provide_job_info.py"]
+
+  query = {
+    path = "../src/main/resources/jobInfo.json"
+  }
+}
+
 provider "aws" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
@@ -5,11 +15,11 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "mapperOutputBucket" {
-  bucket = "${var.mapperOutputBucket}"
+  bucket = "${data.external.jobInfo.result.mapperOutputBucket}"
 }
 
 resource "aws_s3_bucket" "reducerOutputBucket" {
-  bucket = "${var.reducerOutputBucket}"
+  bucket = "${data.external.jobInfo.result.reducerOutputBucket}"
 }
 
 resource "aws_iam_role" "iamForLambda" {
@@ -75,28 +85,28 @@ resource "aws_lambda_function" "coordinator" {
 
 resource "aws_lambda_function" "mapper" {
   filename = "../target/mapreduce.jar"
-  function_name = "${var.mapperFunctionName}"
+  function_name = "${data.external.jobInfo.result.mapperFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
   handler = "mapper_wrapper.MapperWrapper"
   source_code_hash = "${base64sha256(file("../target/mapreduce.jar"))}"
   runtime = "java8"
-  memory_size = "${var.mapperMemory}"
+  memory_size = "${data.external.jobInfo.result.mapperMemory}"
   timeout = "300"
 }
 
 resource "aws_lambda_function" "reducer" {
   filename = "../target/mapreduce.jar"
-  function_name = "${var.reducerFunctionName}"
+  function_name = "${data.external.jobInfo.result.reducerFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
   handler = "reducer_wrapper.ReducerWrapper"
   source_code_hash = "${base64sha256(file("../target/mapreduce.jar"))}"
   runtime = "java8"
-  memory_size = "${var.reducerMemory}"
+  memory_size = "${data.external.jobInfo.result.reducerMemory}"
   timeout = "300"
 }
 
 resource "aws_dynamodb_table" "statusTable" {
-  name = "${var.statusTable}"
+  name = "${data.external.jobInfo.result.statusTable}"
   read_capacity = 5
   write_capacity = 5
   hash_key = "job"
