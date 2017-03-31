@@ -63,15 +63,15 @@ You can use the utility method `Commons.getReaderFromObjectInfo(ObjectInfoSimple
 }
 ```
 
-The `jobId` attribute is automatically instantiated.
+`jobId` is automatically instantiated.
 
-The `jobInputBucket` contains the batch parts that each lambda mapper will process.
+`jobInputBucket` contains the batch parts that each lambda mapper will process.
 
-The `mapperOutputBucket` is the bucket where the mappers will put their results.
+`mapperOutputBucket` is the bucket where the mappers will put their results.
 
-The `reducerOutputBucket` is the bucket where the reducers will put their results.
+`reducerOutputBucket` is the bucket where the reducers will put their results.
 
-The `reducerMemory` and the `mapperMemory` attributes are the memory allocated to the lambda functions. They are used by the framework to compute the batch size that each mapper/reducer will process.
+`reducerMemory` and `mapperMemory` are the amount of memory(and other ressources) allocated to the lambda functions. They are used by the framework to compute the batch size that each mapper/reducer will process.
 
 `mapperForceBatchSize` and `reducerForceBatchSize` are used to force the framework to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**.
 A value of -1 means that the values will be automatically computed.
