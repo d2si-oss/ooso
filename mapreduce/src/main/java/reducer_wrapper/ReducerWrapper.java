@@ -2,13 +2,17 @@ package reducer_wrapper;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import reducer_logic.ReducerLogic;
-import utils.*;
+import reducer.ReducerAbstract;
+import utils.Commons;
+import utils.JobInfo;
+import utils.JobInfoProvider;
+import utils.ObjectInfoSimple;
 
 import java.io.IOException;
 import java.util.List;
 
 public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String> {
+    private ReducerAbstract reducerLogic;
 
     private JobInfo jobInfo;
 
@@ -19,6 +23,8 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
     public String handleRequest(ReducerWrapperInfo reducerWrapperInfo, Context context) {
 
         try {
+
+            this.reducerLogic = (ReducerAbstract) getClass().getClassLoader().loadClass("reducer.Reducer").newInstance();
 
             this.jobInfo = JobInfoProvider.getJobInfo();
 
@@ -35,13 +41,11 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
         return "OK";
     }
 
     private String processBatch(List<ObjectInfoSimple> batch) throws Exception {
-        return ReducerLogic.reduceResultCalculator(batch);
+        return this.reducerLogic.reduce(batch);
     }
 
 
