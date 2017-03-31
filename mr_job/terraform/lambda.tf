@@ -98,14 +98,3 @@ resource "aws_lambda_function" "reducer" {
   memory_size = "${data.external.jobInfo.result.reducerMemory}"
   timeout = "300"
 }
-
-resource "aws_dynamodb_table" "statusTable" {
-  name = "${data.external.jobInfo.result.statusTable}"
-  read_capacity = 5
-  write_capacity = 5
-  hash_key = "job"
-  attribute {
-    name = "job"
-    type = "S"
-  }
-}
