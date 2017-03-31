@@ -3,9 +3,11 @@ package coordinator;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.google.gson.Gson;
-import org.joda.time.DateTime;
 import reducer_wrapper.ReducerWrapperInfo;
-import utils.*;
+import utils.Commons;
+import utils.JobInfo;
+import utils.JobInfoProvider;
+import utils.ObjectInfoSimple;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,10 +36,8 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
             if (notYetFinished) {
                 CoordinatorInfo nextCoordinatorInfo = new CoordinatorInfo(coordinatorInfo.getStep() + 1);
                 String payload = this.gson.toJson(nextCoordinatorInfo);
-                Commons.invokeLambdaSync("coordinator", payload);
+                Commons.invokeLambdaAsync("coordinator", payload);
             }
-
-            Commons.setFinishDate(this.jobId, new DateTime());
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

@@ -44,7 +44,7 @@ public class ObjectInfoSimple {
 ```
 
 You can use the utility method `Commons.getReaderFromObjectInfo(ObjectInfoSimple info)` to open a reader of the object passed as a parameter.
-For the reducer, you are responsible of closing the opened readers.
+**For the reducer, you are responsible of closing the opened readers.**
 
 - The `jsonInfo.json` file located at src/main/resources holds various configuration options of the job.
 
@@ -73,7 +73,7 @@ The `reducerOutputBucket` is the bucket where the reducers will put their result
 
 The `reducerMemory` and the `mapperMemory` attributes are the memory allocated to the lambda functions. They are used by the framework to compute the batch size that each mapper/reducer will process.
 
-The `mapperForceBatchSize` and the `reducerForceBatchSize` are used to force the framework to use the specified batch size instead of automatically computing it. The `reducerForceBatchSize` must be greater or equal than 2.
+The `mapperForceBatchSize` and the `reducerForceBatchSize` are used to force the framework to use the specified batch size instead of automatically computing it. **The `reducerForceBatchSize` must be greater or equal than 2**.
 A value of -1 means that the values will be automatically computed.
 
 - The `pom.xml` must contain the framework dependency
