@@ -1,28 +1,24 @@
 package utils;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
-import com.amazonaws.services.lambda.AWSLambdaAsync;
+import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
-import reducer_wrapper.ReducerStepInfo;
+import org.joda.time.DateTime;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Commons {
-    public static final int MAP_DONE_DUMMY_STEP = -1;
-    public static final int MAP_INFO_DUMMY_STEP = -2;
-    public static final int REDUCE_DONE_DUMMY_STEP = -3;
-
-
     public final static String JSON_TYPE = "application/json";
     public final static String TEXT_TYPE = "text/plain";
 
@@ -103,114 +99,8 @@ public class Commons {
         return getBatches(bucket, memory, "", desiredBatchSize);
     }
 
-    public static ReducerStepInfo getStepInfo(String job, int step) {
-        Table mapreduce_state = StatusTableProvider.getStatusTable();
-
-        GetItemSpec getItemSpec = new GetItemSpec()
-                .withPrimaryKey("job", job, "step", step)
-                .withConsistentRead(true);
-
-
-        Item item = mapreduce_state.getItem(getItemSpec);
-
-        ReducerStepInfo stepInfo = new ReducerStepInfo();
-        stepInfo.setStep(step);
-        stepInfo.setFilesProcessed(item.getInt("filesProcessed"));
-        stepInfo.setFilesToProcess(item.getInt("filesToProcess"));
-        stepInfo.setBatchesCount(item.getInt("batchesCount"));
-
-        return stepInfo;
-    }
-
-    public static void incrementFilesToProcess(String job, int step, int increment) {
-        Table mapreduce_state = StatusTableProvider.getStatusTable();
-
-        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("job", job, "step", step)
-                .withUpdateExpression("set filesToProcess = filesToProcess + :ftp")
-                .withValueMap(new ValueMap()
-                        .withNumber(":ftp", increment));
-
-
-        mapreduce_state.updateItem(updateItemSpec);
-    }
-
-    public static void incrementFilesProcessed(String job, int step, int increment) {
-
-        Table mapreduce_state = StatusTableProvider.getStatusTable();
-
-        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("job", job, "step", step)
-                .withUpdateExpression("set filesProcessed = filesProcessed + :fp")
-                .withValueMap(new ValueMap()
-                        .withNumber(":fp", increment));
-
-
-        mapreduce_state.updateItem(updateItemSpec);
-    }
-
-    public static void updateStepInfo(String job,
-                                      int step,
-                                      int filesToProcess,
-                                      int filesProcessed,
-                                      int batchesCount) {
-
-
-        Table mapreduce_state = StatusTableProvider.getStatusTable();
-
-        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("job", job, "step", step)
-                .withUpdateExpression("set filesProcessed = :fp, filesToProcess = :ftp, batchesCount = :bc")
-                .withValueMap(new ValueMap()
-                        .withNumber(":fp", filesProcessed)
-                        .withNumber(":ftp", filesToProcess)
-                        .withNumber(":bc", batchesCount));
-
-
-        mapreduce_state.updateItem(updateItemSpec);
-
-    }
-
-    public static void updateStepInfo(String job,
-                                      int step,
-                                      int filesToProcess,
-                                      int filesProcessed) {
-
-
-        Table mapreduce_state = StatusTableProvider.getStatusTable();
-
-        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("job", job, "step", step)
-                .withUpdateExpression("set filesProcessed = :fp, filesToProcess = :ftp")
-                .withValueMap(new ValueMap()
-                        .withNumber(":fp", filesProcessed)
-                        .withNumber(":ftp", filesToProcess));
-
-
-        mapreduce_state.updateItem(updateItemSpec);
-
-    }
-
-    public static void setBatchesCount(String job,
-                                       int step,
-                                       int batchesCount) {
-
-
-        Table mapreduce_state = StatusTableProvider.getStatusTable();
-
-        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("job", job, "step", step)
-                .withUpdateExpression("set batchesCount = :bc")
-                .withValueMap(new ValueMap()
-                        .withNumber(":bc", batchesCount));
-
-
-        mapreduce_state.updateItem(updateItemSpec);
-
-    }
-
     public static void invokeLambdaAsync(String function, String payload) {
-        AWSLambdaAsync lambda = AWSLambdaProvider.getLambdaClient();
+        AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
 
         InvokeRequest request = new InvokeRequest()
                 .withFunctionName(function)
@@ -218,5 +108,53 @@ public class Commons {
                 .withPayload(payload);
 
         lambda.invoke(request);
+    }
+
+
+    public static void setStartDate(String job, DateTime startDate) {
+
+        Table mapreduce_state = StatusTableProvider.getStatusTable();
+
+        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+                .withPrimaryKey("job", job)
+                .withUpdateExpression("set startDate = :sd")
+                .withValueMap(new ValueMap()
+                        .withString(":sd", startDate.toString()));
+
+        mapreduce_state.updateItem(updateItemSpec);
+
+    }
+
+    public static void setFinishDate(String job, DateTime finishDate) {
+
+        Table mapreduce_state = StatusTableProvider.getStatusTable();
+
+        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+                .withPrimaryKey("job", job)
+                .withUpdateExpression("set finishDate = :fd")
+                .withValueMap(new ValueMap()
+                        .withString(":fd", finishDate.toString()));
+
+        mapreduce_state.updateItem(updateItemSpec);
+
+    }
+
+    public static BufferedReader getReaderFromObjectInfo(ObjectInfoSimple objectInfo) {
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
+
+        S3Object object = s3Client.getObject(objectInfo.getBucket(), objectInfo.getKey());
+        S3ObjectInputStream objectContentRawStream = object.getObjectContent();
+
+        return new BufferedReader(new InputStreamReader(objectContentRawStream));
+    }
+
+    public static InvokeResult invokeLambdaSync(String function, String payload) {
+        AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
+
+        InvokeRequest request = new InvokeRequest()
+                .withFunctionName(function)
+                .withPayload(payload);
+
+        return lambda.invoke(request);
     }
 }

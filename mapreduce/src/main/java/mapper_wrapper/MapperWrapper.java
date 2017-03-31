@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import mapper_logic.MapperLogic;
+import mapper.MapperAbstract;
 import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
+    private MapperAbstract mapperLogic;
 
     private AmazonS3 s3Client;
     private MapperWrapperInfo mapperWrapperInfo;
@@ -34,17 +35,24 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
             this.jobId = this.jobInfo.getJobId();
 
             this.mapperWrapperInfo = mapperWrapperInfo;
+
+            this.mapperLogic = (MapperAbstract) getClass().getClassLoader().loadClass("mapper.Mapper").newInstance();
+
             List<ObjectInfoSimple> batch = mapperWrapperInfo.getBatch();
 
-            for (ObjectInfoSimple object : batch) {
-                String processResult = processKey(object.getKey());
-                storeResult(processResult, object.getKey());
-            }
+            processBatch(batch);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "OK";
+    }
+
+    private void processBatch(List<ObjectInfoSimple> batch) throws IOException {
+        for (ObjectInfoSimple object : batch) {
+            String processResult = processKey(object.getKey());
+            storeResult(processResult, object.getKey());
+        }
     }
 
 
@@ -53,7 +61,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         Commons.storeObject(Commons.JSON_TYPE,
                 result,
                 this.jobInfo.getMapperOutputBucket(),
-                this.jobId + "-" + key + "-" + this.mapperWrapperInfo.getId());
+                this.jobId + "/" + key + "-" + this.mapperWrapperInfo.getId());
     }
 
     private String processKey(String key) throws IOException {
@@ -61,7 +69,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         S3ObjectInputStream objectContentRawStream = object.getObjectContent();
         BufferedReader objectBufferedReader = new BufferedReader(new InputStreamReader(objectContentRawStream));
 
-        String result = MapperLogic.mapResultCalculator(objectBufferedReader);
+        String result = this.mapperLogic.map(objectBufferedReader);
 
         objectBufferedReader.close();
         objectContentRawStream.close();

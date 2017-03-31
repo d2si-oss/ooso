@@ -8,13 +8,15 @@ public class JobInfo {
     private String mapperFunctionName;
     private String reducerFunctionName;
     private String statusTable;
-    private int mapperMemory;
-    private int reducerMemory;
+    private String mapperMemory;
+    private String reducerMemory;
+    private String mapperForceBatchSize;
+    private String reducerForceBatchSize;
 
     public JobInfo() {
     }
 
-    public JobInfo(String jobId, String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String mapperFunctionName, String reducerFunctionName, String statusTable, int mapperMemory, int reducerMemory) {
+    public JobInfo(String jobId, String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String mapperFunctionName, String reducerFunctionName, String statusTable, String mapperMemory, String reducerMemory, String mapperForceBatchSize, String reducerForceBatchSize) {
         this.jobId = jobId;
         this.jobInputBucket = jobInputBucket;
         this.mapperOutputBucket = mapperOutputBucket;
@@ -24,6 +26,8 @@ public class JobInfo {
         this.statusTable = statusTable;
         this.mapperMemory = mapperMemory;
         this.reducerMemory = reducerMemory;
+        this.mapperForceBatchSize = mapperForceBatchSize;
+        this.reducerForceBatchSize = reducerForceBatchSize;
     }
 
     public String getJobInputBucket() {
@@ -32,14 +36,6 @@ public class JobInfo {
 
     public void setJobInputBucket(String jobInputBucket) {
         this.jobInputBucket = jobInputBucket;
-    }
-
-    public int getMapperMemory() {
-        return mapperMemory;
-    }
-
-    public void setMapperMemory(int mapperMemory) {
-        this.mapperMemory = mapperMemory;
     }
 
     public String getMapperOutputBucket() {
@@ -56,14 +52,6 @@ public class JobInfo {
 
     public void setReducerOutputBucket(String reducerOutputBucket) {
         this.reducerOutputBucket = reducerOutputBucket;
-    }
-
-    public int getReducerMemory() {
-        return reducerMemory;
-    }
-
-    public void setReducerMemory(int reducerMemory) {
-        this.reducerMemory = reducerMemory;
     }
 
     public String getMapperFunctionName() {
@@ -96,6 +84,38 @@ public class JobInfo {
 
     public void setJobId(String jobId) {
         this.jobId = jobId;
+    }
+
+    public int getMapperMemory() {
+        return Integer.parseInt(mapperMemory);
+    }
+
+    public void setMapperMemory(String mapperMemory) {
+        this.mapperMemory = mapperMemory;
+    }
+
+    public int getReducerMemory() {
+        return Integer.parseInt(reducerMemory);
+    }
+
+    public void setReducerMemory(String reducerMemory) {
+        this.reducerMemory = reducerMemory;
+    }
+
+    public int getMapperForceBatchSize() {
+        return Integer.parseInt(mapperForceBatchSize);
+    }
+
+    public void setMapperForceBatchSize(String mapperForceBatchSize) {
+        this.mapperForceBatchSize = mapperForceBatchSize;
+    }
+
+    public int getReducerForceBatchSize() {
+        return Integer.parseInt(reducerForceBatchSize);
+    }
+
+    public void setReducerForceBatchSize(String reducerForceBatchSize) {
+        this.reducerForceBatchSize = reducerForceBatchSize;
     }
 }
 

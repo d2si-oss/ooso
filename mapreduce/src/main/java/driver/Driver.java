@@ -1,22 +1,23 @@
 package driver;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.gson.Gson;
+import coordinator.CoordinatorInfo;
 import mapper_wrapper.MapperWrapperInfo;
-import utils.*;
+import org.joda.time.DateTime;
+import utils.Commons;
+import utils.JobInfo;
+import utils.JobInfoProvider;
+import utils.ObjectInfoSimple;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Driver implements RequestHandler<Void, String> {
 
@@ -35,27 +36,17 @@ public class Driver implements RequestHandler<Void, String> {
 
             this.jobId = this.jobInfo.getJobId();
 
+            Commons.setStartDate(this.jobId, new DateTime());
+
+
             cleanup();
 
-            List<List<ObjectInfoSimple>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory());
+            List<List<ObjectInfoSimple>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory(), this.jobInfo.getMapperForceBatchSize());
 
 
-            int currentMapperId = 0;
+            invokeMappers(batches);
 
-            Map<Integer, Integer> batchSizePerMapper = new HashMap<>(batches.size());
-
-            for (List<ObjectInfoSimple> batch : batches) {
-                MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId);
-
-                String payload = this.gson.toJson(mapperWrapperInfo);
-
-                Commons.invokeLambdaAsync(this.jobInfo.getMapperFunctionName(), payload);
-
-                batchSizePerMapper.put(currentMapperId++, batch.size());
-
-            }
-
-            updateMappersInfo(batches.size(), batchSizePerMapper);
+            invokeReducerCoordinator();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -64,45 +55,45 @@ public class Driver implements RequestHandler<Void, String> {
         return "Ok";
     }
 
-    private void updateMappersInfo(int mapperCount, Map<Integer, Integer> batchSizePerMapper) throws IOException {
-        MappersInfo mappersInfo = new MappersInfo();
-        mappersInfo.setMapperCount(mapperCount);
-        mappersInfo.setBatchCountPerMapper(batchSizePerMapper);
-
-        String jobInfoJson = this.gson.toJson(mappersInfo);
-
-        Table statusTable = StatusTableProvider.getStatusTable();
-        Item info = new Item()
-                .withString("job", this.jobId)
-                .withNumber("step", Commons.MAP_INFO_DUMMY_STEP)
-                .withJSON("map_info", jobInfoJson);
-
-        statusTable.putItem(info);
+    private void invokeReducerCoordinator() {
+        CoordinatorInfo coordinatorInfo = new CoordinatorInfo(0);
+        String payload = this.gson.toJson(coordinatorInfo);
+        Commons.invokeLambdaAsync("coordinator", payload);
     }
+
+    private void invokeMappers(List<List<ObjectInfoSimple>> batches) throws InterruptedException {
+        int currentMapperId = 0;
+
+
+        ExecutorService executorService = Executors.newFixedThreadPool(batches.size());
+
+        for (List<ObjectInfoSimple> batch : batches) {
+            int finalCurrentMapperId = currentMapperId;
+
+            executorService.submit(() -> {
+                MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, finalCurrentMapperId);
+                String payload = this.gson.toJson(mapperWrapperInfo);
+                Commons.invokeLambdaSync(this.jobInfo.getMapperFunctionName(), payload);
+            });
+
+            currentMapperId++;
+        }
+
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.MINUTES);
+    }
+
 
     private void cleanup() {
 
-        List<S3ObjectSummary> mapOutput = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket(), this.jobId + "-");
-        List<S3ObjectSummary> reduceOutput = Commons.getBucketObjectSummaries(this.jobInfo.getReducerOutputBucket(), this.jobId + "-");
-
-//        Stream.concat(Stream.concat(statusObjects.stream(), mapOutput.stream()), reduceOutput.stream())
-//                .forEach(object -> this.s3Client.deleteObject(object.getBucketName(), object.getKey()));
+        List<S3ObjectSummary> mapOutput = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket(), this.jobId + "/");
+        List<S3ObjectSummary> reduceOutput = Commons.getBucketObjectSummaries(this.jobInfo.getReducerOutputBucket(), this.jobId + "/");
 
         for (S3ObjectSummary object : mapOutput)
             this.s3Client.deleteObject(object.getBucketName(), object.getKey());
 
         for (S3ObjectSummary object : reduceOutput)
             this.s3Client.deleteObject(object.getBucketName(), object.getKey());
-
-
-        Table statusTable = StatusTableProvider.getStatusTable();
-
-        ItemCollection<QueryOutcome> query = statusTable.query("job", this.jobId);
-
-        for (Item item : query) {
-            statusTable.deleteItem("job", item.getString("job"),
-                    "step", item.getInt("step"));
-        }
 
     }
 
