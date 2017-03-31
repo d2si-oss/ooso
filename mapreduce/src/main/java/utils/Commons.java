@@ -1,16 +1,11 @@
 package utils;
 
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
-import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
-import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
-import org.joda.time.DateTime;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -37,7 +32,7 @@ public class Commons {
         return objectListing.getObjectSummaries();
     }
 
-    public static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {
+    private static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {
         int maxUsableMemory = (int) (0.6 * 1024 * 1024 * availableMemory);
         long totalSize = 0;
         for (S3ObjectSummary summary : objectSummaries)
@@ -64,7 +59,7 @@ public class Commons {
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
         List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
-        int batchSize = desiredBatchSize == -1 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
+        int batchSize = desiredBatchSize <= 0 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
 
         List<List<ObjectInfoSimple>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
         List<ObjectInfoSimple> batch = new ArrayList<>(batchSize);
@@ -110,35 +105,6 @@ public class Commons {
         lambda.invoke(request);
     }
 
-
-    public static void setStartDate(String job, DateTime startDate) {
-
-        Table mapreduce_state = StatusTableProvider.getStatusTable();
-
-        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("job", job)
-                .withUpdateExpression("set startDate = :sd")
-                .withValueMap(new ValueMap()
-                        .withString(":sd", startDate.toString()));
-
-        mapreduce_state.updateItem(updateItemSpec);
-
-    }
-
-    public static void setFinishDate(String job, DateTime finishDate) {
-
-        Table mapreduce_state = StatusTableProvider.getStatusTable();
-
-        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey("job", job)
-                .withUpdateExpression("set finishDate = :fd")
-                .withValueMap(new ValueMap()
-                        .withString(":fd", finishDate.toString()));
-
-        mapreduce_state.updateItem(updateItemSpec);
-
-    }
-
     public static BufferedReader getReaderFromObjectInfo(ObjectInfoSimple objectInfo) {
         AmazonS3 s3Client = AmazonS3Provider.getS3Client();
 
@@ -148,13 +114,13 @@ public class Commons {
         return new BufferedReader(new InputStreamReader(objectContentRawStream));
     }
 
-    public static InvokeResult invokeLambdaSync(String function, String payload) {
+    public static void invokeLambdaSync(String function, String payload) {
         AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
 
         InvokeRequest request = new InvokeRequest()
                 .withFunctionName(function)
                 .withPayload(payload);
 
-        return lambda.invoke(request);
+        lambda.invoke(request);
     }
 }

@@ -4,11 +4,11 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.gson.Gson;
 import coordinator.CoordinatorInfo;
 import mapper_wrapper.MapperWrapperInfo;
-import org.joda.time.DateTime;
 import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
@@ -36,10 +36,10 @@ public class Driver implements RequestHandler<Void, String> {
 
             this.jobId = this.jobInfo.getJobId();
 
-            Commons.setStartDate(this.jobId, new DateTime());
-
 
             cleanup();
+
+            validateParamsOrFail();
 
             List<List<ObjectInfoSimple>> batches = Commons.getBatches(this.jobInfo.getJobInputBucket(), this.jobInfo.getMapperMemory(), this.jobInfo.getMapperForceBatchSize());
 
@@ -49,10 +49,24 @@ public class Driver implements RequestHandler<Void, String> {
             invokeReducerCoordinator();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         return "Ok";
+    }
+
+    private void validateParamsOrFail() {
+        if (!this.s3Client.doesBucketExist(this.jobInfo.getJobInputBucket()))
+            throw new AmazonS3Exception("Bad parameter <jobInputBucket>: Bucket does not exist");
+
+        if (!this.s3Client.doesBucketExist(this.jobInfo.getMapperOutputBucket()))
+            throw new AmazonS3Exception("Bad parameter <mapperOutputBucket>: Bucket does not exist");
+
+        if (!this.s3Client.doesBucketExist(this.jobInfo.getReducerOutputBucket()))
+            throw new AmazonS3Exception("Bad parameter <reducerOutputBucket>: Bucket does not exist");
+
+        if (this.jobInfo.getReducerForceBatchSize() == 1)
+            throw new AmazonS3Exception("Bad parameter <reducerForceBatchSize>: Reducer batch size must be greater or equal than 2");
     }
 
     private void invokeReducerCoordinator() {
