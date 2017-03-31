@@ -64,7 +64,7 @@ public class Commons {
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
         List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
-        int batchSize = desiredBatchSize == -1 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
+        int batchSize = desiredBatchSize <= 0 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
 
         List<List<ObjectInfoSimple>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
         List<ObjectInfoSimple> batch = new ArrayList<>(batchSize);
