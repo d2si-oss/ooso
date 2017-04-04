@@ -82,8 +82,8 @@ A value of -1 means that the values will be automatically computed.
     <dependencies>
     ...
         <dependency>
-            <groupId>map_reduce</groupId>
-            <artifactId>map_reduce</artifactId>
+            <groupId>fr.d2-si </groupId>
+            <artifactId>serverless-mapreduce</artifactId>
             <version>1</version>
         </dependency>
     ...
@@ -96,8 +96,8 @@ This command should be able to do just that:
 ```commandline
 mvn org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file
             -Dfile=mr_job/jars/mapreduce.jar 
-            -DgroupId=map_reduce 
-            -DartifactId=map_reduce 
+            -DgroupId=fr.d2-si 
+            -DartifactId=serverless-mapreduce 
             -Dversion=1 
             -Dpackaging=jar 
             -DlocalRepositoryPath=~/.m2/repository/
