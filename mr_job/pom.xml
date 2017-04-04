@@ -14,8 +14,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>map_reduce</groupId>
-            <artifactId>map_reduce</artifactId>
+            <groupId>fr.d2-si</groupId>
+            <artifactId>serverless-mapreduce</artifactId>
             <version>1</version>
         </dependency>
     </dependencies>
