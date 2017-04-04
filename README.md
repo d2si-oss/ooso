@@ -74,7 +74,7 @@ You can use the utility method `Commons.getReaderFromObjectInfo(ObjectInfoSimple
 `reducerMemory` and `mapperMemory` are the amount of memory(and other ressources) allocated to the lambda functions. They are used by the framework to compute the batch size that each mapper/reducer will process.
 
 `mapperForceBatchSize` and `reducerForceBatchSize` are used to force the framework to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**.
-A value of -1 means that the values will be automatically computed.
+A less than 0 value means that the values will be automatically computed.
 
 - The `pom.xml` must contain the framework dependency
 
