@@ -111,7 +111,7 @@ You may add any dependency that your mapper and reducer rely on.
 
 To run the job, enter the following command:
 ```commandline
-  aws lambda invoke --function-name driver result
+  aws lambda invoke --function-name driver /dev/null
 ```
 
 To successfully run the command, you need to install the aws cli: [Install AWS Cli](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
