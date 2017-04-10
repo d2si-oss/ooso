@@ -1,0 +1,12 @@
+{
+  "reducerOutputBucket": "big-dataset-reduce",
+  "mapperMemory": "1536",
+  "reducerFunctionName": "reducer",
+  "mapperFunctionName": "mapper",
+  "jobInputBucket": "big-dataset",
+  "mapperForceBatchSize": "-1",
+  "mapperOutputBucket": "big-dataset-map",
+  "reducerMemory": "1536",
+  "jobId": "",
+  "reducerForceBatchSize": "-1"
+}

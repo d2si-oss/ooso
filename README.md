@@ -6,7 +6,7 @@ This is a 100% serveless implementation of the MapReduce algorithm based on AWS 
 
 ##### 1. Projet structure
 
-The `mr_job` directory contains basic mandatory structure for any project using the framework.
+The `example-project` directory contains basic mandatory structure for any project using the framework.
 The structure is as follows :
 
 ![alt text](images/directory_tree.png "Project structure")
@@ -82,7 +82,7 @@ A less than 0 value means that the values will be automatically computed.
     <dependencies>
     ...
         <dependency>
-            <groupId>fr.d2-si </groupId>
+            <groupId>fr.d2-si</groupId>
             <artifactId>serverless-mapreduce</artifactId>
             <version>1</version>
         </dependency>
@@ -95,7 +95,7 @@ This command should be able to do just that:
 
 ```commandline
 mvn org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file
-            -Dfile=mr_job/jars/mapreduce.jar 
+            -Dfile=example-project/jars/mapreduce.jar 
             -DgroupId=fr.d2-si 
             -DartifactId=serverless-mapreduce 
             -Dversion=1 
