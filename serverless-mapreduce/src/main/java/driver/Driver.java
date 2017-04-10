@@ -3,16 +3,11 @@ package driver;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import coordinator.CoordinatorInfo;
 import mapper_wrapper.MapperWrapperInfo;
-import org.joda.time.DateTime;
-import utils.Commons;
-import utils.JobInfo;
-import utils.JobInfoProvider;
-import utils.ObjectInfoSimple;
+import utils.*;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -29,7 +24,7 @@ public class Driver implements RequestHandler<Void, String> {
     @Override
     public String handleRequest(Void event, Context context) {
         try {
-            this.s3Client = AmazonS3ClientBuilder.standard().build();
+            this.s3Client = AmazonS3Provider.getS3Client();
             this.jobInfo = JobInfoProvider.getJobInfo();
 
             this.jobId = this.jobInfo.getJobId();
