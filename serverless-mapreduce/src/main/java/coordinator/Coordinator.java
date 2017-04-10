@@ -32,10 +32,6 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
                 CoordinatorInfo nextCoordinatorInfo = new CoordinatorInfo(coordinatorInfo.getStep() + 1);
                 Commons.invokeLambdaAsync("coordinator", nextCoordinatorInfo);
             }
-
-            DateTime finish = DateTime.now();
-            AmazonS3Provider.getS3Client().putObject("int-bucket", this.jobId + "/finish", finish.toString());
-
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

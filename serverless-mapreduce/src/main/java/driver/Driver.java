@@ -29,13 +29,10 @@ public class Driver implements RequestHandler<Void, String> {
     @Override
     public String handleRequest(Void event, Context context) {
         try {
-            DateTime start = DateTime.now();
             this.s3Client = AmazonS3ClientBuilder.standard().build();
             this.jobInfo = JobInfoProvider.getJobInfo();
 
             this.jobId = this.jobInfo.getJobId();
-            s3Client.putObject("int-bucket", this.jobId + "/start", start.toString());
-
 
             cleanup();
 
