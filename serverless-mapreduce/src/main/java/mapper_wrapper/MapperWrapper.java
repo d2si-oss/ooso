@@ -7,10 +7,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import mapper.MapperAbstract;
-import utils.Commons;
-import utils.JobInfo;
-import utils.JobInfoProvider;
-import utils.ObjectInfoSimple;
+import utils.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,7 +26,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
 
         try {
-            this.s3Client = AmazonS3ClientBuilder.standard().build();
+            this.s3Client = AmazonS3Provider.getS3Client();
             this.jobInfo = JobInfoProvider.getJobInfo();
 
             this.jobId = this.jobInfo.getJobId();
