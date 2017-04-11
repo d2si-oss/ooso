@@ -7,7 +7,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
 import com.google.gson.Gson;
-import coordinator.CoordinatorInfo;
+import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,8 +18,7 @@ import java.util.List;
 public class Commons {
     public final static String JSON_TYPE = "application/json";
     public final static String TEXT_TYPE = "text/plain";
-    private final static Gson GSON = new Gson();
-
+    private final static Gson GSON = new GsonBuilder().serializeNulls().setLenient().create();
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket) {
         return getBucketObjectSummaries(bucket, "");
@@ -98,8 +97,8 @@ public class Commons {
     }
 
     public static void invokeLambdaAsync(String function, Object payload) {
+        //            String payloadString = JSON_MAPPER.writeValueAsString(payload);
         String payloadString = GSON.toJson(payload);
-
         AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
 
         InvokeRequest request = new InvokeRequest()
@@ -112,7 +111,6 @@ public class Commons {
 
     public static void invokeLambdaSync(String function, Object payload) {
         String payloadString = GSON.toJson(payload);
-
         AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
 
         InvokeRequest request = new InvokeRequest()
@@ -120,6 +118,7 @@ public class Commons {
                 .withPayload(payloadString);
 
         lambda.invoke(request);
+
     }
 
     public static BufferedReader getReaderFromObjectInfo(ObjectInfoSimple objectInfo) {

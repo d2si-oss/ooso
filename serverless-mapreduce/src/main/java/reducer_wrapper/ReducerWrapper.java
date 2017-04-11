@@ -17,6 +17,7 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
     private JobInfo jobInfo;
 
     private String jobId;
+
     private ReducerWrapperInfo reducerWrapperInfo;
 
     @Override
@@ -36,7 +37,7 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
 
             String reduceResult = processBatch(batch);
 
-            storeResult(reduceResult);
+            storeResult(reduceResult, this.reducerWrapperInfo.isLast());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,10 +54,13 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
     }
 
 
-    private void storeResult(String result) throws IOException {
+    private void storeResult(String result, Boolean last) throws IOException {
+
         Commons.storeObject(Commons.JSON_TYPE,
                 result,
                 jobInfo.getReducerOutputBucket(),
-                this.jobId + "/" + this.reducerWrapperInfo.getStep() + "-reducer-" + this.reducerWrapperInfo.getId());
+                last ?
+                        this.jobId + "/result" :
+                        this.jobId + "/" + this.reducerWrapperInfo.getStep() + "-reducer-" + this.reducerWrapperInfo.getId());
     }
 }
