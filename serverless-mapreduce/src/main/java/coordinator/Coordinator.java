@@ -2,11 +2,14 @@ package coordinator;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import org.joda.time.DateTime;
 import reducer_wrapper.ReducerWrapperInfo;
-import utils.*;
+import utils.Commons;
+import utils.JobInfo;
+import utils.JobInfoProvider;
+import utils.ObjectInfoSimple;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,7 +69,7 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
                 this.jobInfo.getReducerOutputBucket();
     }
 
-    private void invokeReducers(int reduceStep, List<List<ObjectInfoSimple>> batches) throws InterruptedException {
+    private void invokeReducers(int reduceStep, List<List<ObjectInfoSimple>> batches) throws InterruptedException, UnsupportedEncodingException {
         int id = 0;
 
         ExecutorService executorService = Executors.newFixedThreadPool(batches.size());
@@ -74,10 +77,12 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
         for (List<ObjectInfoSimple> batch : batches) {
             final int finalId = id;
             executorService.submit(() -> {
+
                 ReducerWrapperInfo reducerWrapperInfo = new ReducerWrapperInfo(
                         finalId,
                         batch,
-                        reduceStep);
+                        reduceStep,
+                        batches.size() == 1);
 
                 Commons.invokeLambdaSync(this.jobInfo.getReducerFunctionName(), reducerWrapperInfo);
             });

@@ -8,14 +8,16 @@ public class ReducerWrapperInfo {
     private int id;
     private List<ObjectInfoSimple> batch;
     private int step;
+    private boolean last;
 
     public ReducerWrapperInfo() {
     }
 
-    public ReducerWrapperInfo(int id, List<ObjectInfoSimple> batch, int step) {
+    public ReducerWrapperInfo(int id, List<ObjectInfoSimple> batch, int step, boolean last) {
         this.id = id;
         this.batch = batch;
         this.step = step;
+        this.last = last;
     }
 
     public List<ObjectInfoSimple> getBatch() {
@@ -40,5 +42,17 @@ public class ReducerWrapperInfo {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public boolean isLast() {
+        return last;
+    }
+
+    public boolean getLast() {
+        return last;
+    }
+
+    public void setLast(boolean last) {
+        this.last = last;
     }
 }

@@ -95,8 +95,8 @@ This command should be able to do just that:
 
 ```commandline
 mvn org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file
-            -Dfile=example-project/jars/mapreduce.jar 
-            -DgroupId=fr.d2-si 
+            -Dfile=example-project/jars/serverless-mapreduce.jar 
+            -DgroupId=fr.d2-si
             -DartifactId=serverless-mapreduce 
             -Dversion=1 
             -Dpackaging=jar 
