@@ -24,16 +24,6 @@ public class Commons {
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket) {
         return getBucketObjectSummaries(bucket, "");
     }
-//
-//    public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket, String prefix) {
-//        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
-//
-//        final ListObjectsRequest req = new ListObjectsRequest()
-//                .withBucketName(bucket)
-//                .withPrefix(prefix);
-//        ObjectListing objectListing = s3Client.listObjects(req);
-//        return objectListing.getObjectSummaries();
-//    }
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket, String prefix) {
         AmazonS3 s3Client = AmazonS3Provider.getS3Client();
