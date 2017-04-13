@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Commons {
     public final static String JSON_TYPE = "application/json";
@@ -23,6 +24,16 @@ public class Commons {
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket) {
         return getBucketObjectSummaries(bucket, "");
     }
+//
+//    public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket, String prefix) {
+//        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
+//
+//        final ListObjectsRequest req = new ListObjectsRequest()
+//                .withBucketName(bucket)
+//                .withPrefix(prefix);
+//        ObjectListing objectListing = s3Client.listObjects(req);
+//        return objectListing.getObjectSummaries();
+//    }
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket, String prefix) {
         AmazonS3 s3Client = AmazonS3Provider.getS3Client();
@@ -31,7 +42,8 @@ public class Commons {
                 .withBucketName(bucket)
                 .withPrefix(prefix);
         ObjectListing objectListing = s3Client.listObjects(req);
-        return objectListing.getObjectSummaries();
+        //discard folders
+        return objectListing.getObjectSummaries().stream().filter(obj -> !obj.getKey().endsWith("/")).collect(Collectors.toList());
     }
 
     private static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {
@@ -60,7 +72,14 @@ public class Commons {
     }
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
-        List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
+        String realBucket = bucket.substring(0,
+                !bucket.contains("/") ?
+                        bucket.length() :
+                        bucket.indexOf("/"));
+
+        String preprefix = realBucket.equals(bucket) ? "" : bucket.substring(bucket.indexOf("/") + 1, bucket.length());
+
+        List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(realBucket, !preprefix.equals("") ? preprefix + "/" + prefix : prefix);
         int batchSize = desiredBatchSize <= 0 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
 
         List<List<ObjectInfoSimple>> batches = new ArrayList<>(objectSummaries.size() / batchSize);

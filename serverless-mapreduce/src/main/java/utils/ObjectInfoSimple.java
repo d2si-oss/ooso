@@ -34,4 +34,12 @@ public class ObjectInfoSimple {
     public void setKey(String key) {
         this.key = key;
     }
+
+    @Override
+    public String toString() {
+        return "ObjectInfoSimple{" +
+                "bucket='" + bucket + '\'' +
+                ", key='" + key + '\'' +
+                '}';
+    }
 }
