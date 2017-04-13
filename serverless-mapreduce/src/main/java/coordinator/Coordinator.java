@@ -27,14 +27,17 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
         try {
             this.jobInfo = JobInfoProvider.getJobInfo();
 
-            this.jobId = this.jobInfo.getJobId();
+            if (!this.jobInfo.getDisableReducer()) {
+                this.jobId = this.jobInfo.getJobId();
 
-            boolean notYetFinished = launchReducers(coordinatorInfo.getStep());
+                boolean notYetFinished = launchReducers(coordinatorInfo.getStep());
 
-            if (notYetFinished) {
-                CoordinatorInfo nextCoordinatorInfo = new CoordinatorInfo(coordinatorInfo.getStep() + 1);
-                Commons.invokeLambdaAsync("coordinator", nextCoordinatorInfo);
+                if (notYetFinished) {
+                    CoordinatorInfo nextCoordinatorInfo = new CoordinatorInfo(coordinatorInfo.getStep() + 1);
+                    Commons.invokeLambdaAsync("coordinator", nextCoordinatorInfo);
+                }
             }
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
