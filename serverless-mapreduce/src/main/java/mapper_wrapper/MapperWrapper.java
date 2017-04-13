@@ -51,22 +51,23 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
 
     private void processBatch(List<ObjectInfoSimple> batch) throws IOException {
         for (ObjectInfoSimple object : batch) {
-            String processResult = processKey(object.getKey());
+            String processResult = processKey(object);
             storeResult(processResult, object.getKey());
         }
     }
 
 
     private void storeResult(String result, String key) throws IOException {
+        String realKey = key.substring(key.lastIndexOf("/") + 1, key.length());
 
         Commons.storeObject(Commons.JSON_TYPE,
                 result,
                 this.jobInfo.getMapperOutputBucket(),
-                this.jobId + "/" + key + "-" + this.mapperWrapperInfo.getId());
+                this.jobId + "/" + realKey + "-" + this.mapperWrapperInfo.getId());
     }
 
-    private String processKey(String key) throws IOException {
-        S3Object object = s3Client.getObject(this.jobInfo.getJobInputBucket(), key);
+    private String processKey(ObjectInfoSimple objectInfoSimple) throws IOException {
+        S3Object object = s3Client.getObject(objectInfoSimple.getBucket(), objectInfoSimple.getKey());
         S3ObjectInputStream objectContentRawStream = object.getObjectContent();
         BufferedReader objectBufferedReader = new BufferedReader(new InputStreamReader(objectContentRawStream));
 
