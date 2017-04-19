@@ -12,11 +12,12 @@ public class JobInfo {
     private String reducerMemory;
     private String mapperForceBatchSize;
     private String reducerForceBatchSize;
+    private String disableReducer;
 
     public JobInfo() {
     }
 
-    public JobInfo(String jobId, String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String mapperFunctionName, String reducerFunctionName, String statusTable, String mapperMemory, String reducerMemory, String mapperForceBatchSize, String reducerForceBatchSize) {
+    public JobInfo(String jobId, String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String mapperFunctionName, String reducerFunctionName, String statusTable, String mapperMemory, String reducerMemory, String mapperForceBatchSize, String reducerForceBatchSize, String disableReducer) {
         this.jobId = jobId;
         this.jobInputBucket = jobInputBucket;
         this.mapperOutputBucket = mapperOutputBucket;
@@ -28,6 +29,7 @@ public class JobInfo {
         this.reducerMemory = reducerMemory;
         this.mapperForceBatchSize = mapperForceBatchSize;
         this.reducerForceBatchSize = reducerForceBatchSize;
+        this.disableReducer = disableReducer;
     }
 
     public String getJobInputBucket() {
@@ -116,6 +118,14 @@ public class JobInfo {
 
     public void setReducerForceBatchSize(String reducerForceBatchSize) {
         this.reducerForceBatchSize = reducerForceBatchSize;
+    }
+
+    public boolean getDisableReducer() {
+        return Boolean.parseBoolean(disableReducer);
+    }
+
+    public void setDisableReducer(String disableReducer) {
+        this.disableReducer = disableReducer;
     }
 }
 

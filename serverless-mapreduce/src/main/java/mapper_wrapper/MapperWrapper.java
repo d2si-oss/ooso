@@ -60,10 +60,16 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
     private void storeResult(String result, String key) throws IOException {
         String realKey = key.substring(key.lastIndexOf("/") + 1, key.length());
 
-        Commons.storeObject(Commons.JSON_TYPE,
+        String destBucket = getDestBucket();
+
+        Commons.storeObject(Commons.TEXT_TYPE,
                 result,
-                this.jobInfo.getMapperOutputBucket(),
-                this.jobId + "/" + realKey + "-" + this.mapperWrapperInfo.getId());
+                destBucket,
+                this.jobId + "/" + realKey);
+    }
+
+    private String getDestBucket() {
+        return this.jobInfo.getDisableReducer() ? this.jobInfo.getReducerOutputBucket() : this.jobInfo.getMapperOutputBucket();
     }
 
     private String processKey(ObjectInfoSimple objectInfoSimple) throws IOException {

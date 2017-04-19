@@ -5,14 +5,10 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import coordinator.CoordinatorInfo;
 import mapper_wrapper.MapperWrapperInfo;
 import utils.*;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class Driver implements RequestHandler<Void, String> {
 
@@ -41,8 +37,6 @@ public class Driver implements RequestHandler<Void, String> {
 
             invokeMappers(batches);
 
-            invokeReducerCoordinator();
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -64,7 +58,8 @@ public class Driver implements RequestHandler<Void, String> {
     }
 
     private void validateParamsOrFail() {
-        if (!this.s3Client.doesBucketExist(this.jobInfo.getJobInputBucket()))
+        String realInputBucket = Commons.getBucketFromFullPath(this.jobInfo.getJobInputBucket());
+        if (!this.s3Client.doesBucketExist(realInputBucket))
             throw new AmazonS3Exception("Bad parameter <jobInputBucket>: Bucket does not exist");
 
         if (!this.s3Client.doesBucketExist(this.jobInfo.getMapperOutputBucket()))
@@ -80,27 +75,12 @@ public class Driver implements RequestHandler<Void, String> {
     private void invokeMappers(List<List<ObjectInfoSimple>> batches) throws InterruptedException {
         int currentMapperId = 0;
 
-
-        ExecutorService executorService = Executors.newFixedThreadPool(batches.size());
-
         for (List<ObjectInfoSimple> batch : batches) {
-            int finalCurrentMapperId = currentMapperId;
 
-            executorService.submit(() -> {
-                MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, finalCurrentMapperId);
-                Commons.invokeLambdaSync(this.jobInfo.getMapperFunctionName(), mapperWrapperInfo);
-            });
-
+            MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId);
+            Commons.invokeLambdaAsync(this.jobInfo.getMapperFunctionName(), mapperWrapperInfo);
             currentMapperId++;
         }
-
-        executorService.shutdown();
-        executorService.awaitTermination(5, TimeUnit.MINUTES);
-    }
-
-    private void invokeReducerCoordinator() {
-        CoordinatorInfo coordinatorInfo = new CoordinatorInfo(0);
-        Commons.invokeLambdaAsync("coordinator", coordinatorInfo);
     }
 
 }
