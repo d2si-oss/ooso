@@ -26,14 +26,33 @@ public class Commons {
     }
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket, String prefix) {
-        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
 
-        final ListObjectsRequest req = new ListObjectsRequest()
-                .withBucketName(bucket)
-                .withPrefix(prefix);
+        String realBucket = getBucketFromFullPath(bucket);
+        String preprefix = getPrefixFromFullPath(bucket);
+
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
+        ListObjectsRequest req = new ListObjectsRequest().withBucketName(realBucket).withPrefix(!preprefix.equals("") ? preprefix + "/" + prefix : prefix);
         ObjectListing objectListing = s3Client.listObjects(req);
-        //discard folders
-        return objectListing.getObjectSummaries().stream().filter(obj -> !obj.getKey().endsWith("/")).collect(Collectors.toList());
+        List<S3ObjectSummary> summaries = objectListing.getObjectSummaries();
+
+        while (objectListing.isTruncated()) {
+            objectListing = s3Client.listNextBatchOfObjects(objectListing);
+            summaries.addAll(objectListing.getObjectSummaries());
+        }
+
+        return summaries.stream().filter((obj) -> !obj.getKey().equals("") && !obj.getKey().endsWith("/")).collect(Collectors.toList());
+    }
+
+    public static String getBucketFromFullPath(String path) {
+        return path.substring(0,
+                !path.contains("/") ?
+                        path.length() :
+                        path.indexOf("/"));
+    }
+
+    public static String getPrefixFromFullPath(String path) {
+        String realBucket = getBucketFromFullPath(path);
+        return realBucket.equals(path) ? "" : path.substring(path.indexOf("/") + 1, path.length());
     }
 
     private static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {
@@ -62,14 +81,7 @@ public class Commons {
     }
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
-        String realBucket = bucket.substring(0,
-                !bucket.contains("/") ?
-                        bucket.length() :
-                        bucket.indexOf("/"));
-
-        String preprefix = realBucket.equals(bucket) ? "" : bucket.substring(bucket.indexOf("/") + 1, bucket.length());
-
-        List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(realBucket, !preprefix.equals("") ? preprefix + "/" + prefix : prefix);
+        List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
         int batchSize = desiredBatchSize <= 0 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
 
         List<List<ObjectInfoSimple>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
@@ -105,29 +117,24 @@ public class Commons {
         return getBatches(bucket, memory, "", desiredBatchSize);
     }
 
-    public static void invokeLambdaAsync(String function, Object payload) {
-        //            String payloadString = JSON_MAPPER.writeValueAsString(payload);
+    public static void invokeLambda(String function, Object payload, boolean async) {
         String payloadString = GSON.toJson(payload);
         AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
 
         InvokeRequest request = new InvokeRequest()
                 .withFunctionName(function)
-                .withInvocationType(InvocationType.Event)
+                .withInvocationType(async ? InvocationType.Event : InvocationType.RequestResponse)
                 .withPayload(payloadString);
 
         lambda.invoke(request);
     }
 
+    public static void invokeLambdaAsync(String function, Object payload) {
+        invokeLambda(function, payload, true);
+    }
+
     public static void invokeLambdaSync(String function, Object payload) {
-        String payloadString = GSON.toJson(payload);
-        AWSLambda lambda = AWSLambdaProvider.getLambdaClient();
-
-        InvokeRequest request = new InvokeRequest()
-                .withFunctionName(function)
-                .withPayload(payloadString);
-
-        lambda.invoke(request);
-
+        invokeLambda(function, payload, false);
     }
 
     public static BufferedReader getReaderFromObjectInfo(ObjectInfoSimple objectInfo) {

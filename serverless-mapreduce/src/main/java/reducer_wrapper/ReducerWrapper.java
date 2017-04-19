@@ -56,7 +56,7 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
 
     private void storeResult(String result, Boolean last) throws IOException {
 
-        Commons.storeObject(Commons.JSON_TYPE,
+        Commons.storeObject(Commons.TEXT_TYPE,
                 result,
                 jobInfo.getReducerOutputBucket(),
                 last ?

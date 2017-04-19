@@ -62,10 +62,10 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
 
         String destBucket = getDestBucket();
 
-        Commons.storeObject(Commons.JSON_TYPE,
+        Commons.storeObject(Commons.TEXT_TYPE,
                 result,
                 destBucket,
-                this.jobId + "/" + realKey + "-" + this.mapperWrapperInfo.getId());
+                this.jobId + "/" + realKey);
     }
 
     private String getDestBucket() {
