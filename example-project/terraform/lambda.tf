@@ -110,20 +110,13 @@ resource "aws_lambda_function" "mappersListener" {
   timeout = "300"
 }
 
-resource "aws_lambda_permission" "allow_bucket" {
-  statement_id = "AllowExecutionFromS3Bucket"
-  action = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.mappersListener.arn}"
-  principal = "s3.amazonaws.com"
-  source_arn = "${aws_s3_bucket.mapperOutputBucket.arn}"
-}
-
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = "${aws_s3_bucket.mapperOutputBucket.id}"
-  lambda_function {
-    lambda_function_arn = "${aws_lambda_function.mappersListener.arn}"
-    events = [
-      "s3:ObjectCreated:*"]
-    filter_prefix = "${data.external.jobInfo.result.jobId}"
-  }
+resource "aws_lambda_function" "reducersListener" {
+  filename = "../target/mapreduce.jar"
+  function_name = "reducers_listener"
+  role = "${aws_iam_role.iamForLambda.arn}"
+  handler = "reducers_listener.ReducersListener"
+  source_code_hash = "${base64sha256(file("../target/mapreduce.jar"))}"
+  runtime = "java8"
+  memory_size = "1536"
+  timeout = "300"
 }

@@ -3,6 +3,7 @@ package coordinator;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import reducer_wrapper.ReducerWrapperInfo;
+import reducers_listener.ReducersListenerInfo;
 import utils.Commons;
 import utils.JobInfo;
 import utils.JobInfoProvider;
@@ -11,9 +12,6 @@ import utils.ObjectInfoSimple;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
 
@@ -27,16 +25,9 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
         try {
             this.jobInfo = JobInfoProvider.getJobInfo();
 
-            if (!this.jobInfo.getDisableReducer()) {
-                this.jobId = this.jobInfo.getJobId();
+            this.jobId = this.jobInfo.getJobId();
 
-                boolean notYetFinished = launchReducers(coordinatorInfo.getStep());
-
-                if (notYetFinished) {
-                    CoordinatorInfo nextCoordinatorInfo = new CoordinatorInfo(coordinatorInfo.getStep() + 1);
-                    Commons.invokeLambdaAsync("coordinator", nextCoordinatorInfo);
-                }
-            }
+            launchReducers(coordinatorInfo.getStep());
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -44,7 +35,7 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
         return "OK";
     }
 
-    private boolean launchReducers(int reduceStep) throws IOException, InterruptedException {
+    private void launchReducers(int reduceStep) throws IOException, InterruptedException {
 
         String inputPrefix = getInputPrefix(reduceStep);
         String inputBucket = whichInputBucket(reduceStep);
@@ -55,9 +46,8 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
                         inputPrefix,
                         this.jobInfo.getReducerForceBatchSize());
 
+        invokeReducersListener(reduceStep, batches.size());
         invokeReducers(reduceStep, batches);
-
-        return batches.size() > 1;
     }
 
     private String getInputPrefix(int reduceStep) {
@@ -74,26 +64,20 @@ public class Coordinator implements RequestHandler<CoordinatorInfo, String> {
 
     private void invokeReducers(int reduceStep, List<List<ObjectInfoSimple>> batches) throws InterruptedException, UnsupportedEncodingException {
         int id = 0;
-
-        ExecutorService executorService = Executors.newFixedThreadPool(batches.size());
-
         for (List<ObjectInfoSimple> batch : batches) {
-            final int finalId = id;
-            executorService.submit(() -> {
+            ReducerWrapperInfo reducerWrapperInfo = new ReducerWrapperInfo(
+                    id++,
+                    batch,
+                    reduceStep,
+                    batches.size() == 1);
 
-                ReducerWrapperInfo reducerWrapperInfo = new ReducerWrapperInfo(
-                        finalId,
-                        batch,
-                        reduceStep,
-                        batches.size() == 1);
-
-                Commons.invokeLambdaSync(this.jobInfo.getReducerFunctionName(), reducerWrapperInfo);
-            });
-
-            id++;
+            Commons.invokeLambdaAsync(this.jobInfo.getReducerFunctionName(), reducerWrapperInfo);
         }
-
-        executorService.shutdown();
-        executorService.awaitTermination(5, TimeUnit.MINUTES);
     }
+
+    private void invokeReducersListener(int step, int batchSize) {
+        ReducersListenerInfo reducersListenerInfo = new ReducersListenerInfo(step, batchSize);
+        Commons.invokeLambdaAsync("reducers_listener", reducersListenerInfo);
+    }
+
 }
