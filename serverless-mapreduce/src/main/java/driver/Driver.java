@@ -34,7 +34,7 @@ public class Driver implements RequestHandler<Void, String> {
                     this.jobInfo.getMapperMemory(),
                     this.jobInfo.getMapperForceBatchSize());
 
-
+            invokeMappersListener();
             invokeMappers(batches);
 
         } catch (Exception e) {
@@ -70,6 +70,10 @@ public class Driver implements RequestHandler<Void, String> {
 
         if (this.jobInfo.getReducerForceBatchSize() == 1)
             throw new AmazonS3Exception("Bad parameter <reducerForceBatchSize>: Reducer batch size must be greater or equal than 2");
+    }
+
+    private void invokeMappersListener() {
+        Commons.invokeLambdaAsync("mappers_listener", null);
     }
 
     private void invokeMappers(List<List<ObjectInfoSimple>> batches) throws InterruptedException {
