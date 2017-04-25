@@ -32,7 +32,7 @@ The library workflow is as follows:
 
 1. The workflow begins by invoking the `Mappers Driver` lambda function
 2. The `Mappers Driver` does two things:
-    1. It compute sbatches of data splits and assigns each batch to a `Mapper`
+    1. It computes batches of data splits and assigns each batch to a `Mapper`
     2. It invokes a `Mappers Listener` lambda function which is responsible of detecting the end of the map phase
 3. Once the `Mappers Listener` detects the end of the map phase, it invokes a first instance of the `Reducers Driver` function
 4. The `Reducers Driver` is somewhat similar to the `Mappers Driver`:
@@ -136,12 +136,12 @@ The `jsonInfo.json` file located at src/main/resources holds various configurati
 
 `reducerOutputBucket` is the bucket where the reducers will put their results.
 
-`reducerMemory` and `mapperMemory` are the amount of memory(and therefore other ressources) allocated to the lambda functions. They are used internally by the library to compute the batch size that each mapper/reducer will process.
+`reducerMemory` and `mapperMemory` are the amount of memory(and therefore other resources) allocated to the lambda functions. They are used internally by the library to compute the batch size that each mapper/reducer will process.
 
 `mapperForceBatchSize` and `reducerForceBatchSize` are used to force the library to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**.
 A less than 0 value means that the values will be automatically computed.
 
-`disableReducer`: if set to "true", disables the reducer if your job dosen't need it.
+`disableReducer`: if set to "true", disables the reducer if your job doesn't need it.
 #### Project packaging
 In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#deployment) of the lambda, you need to install [maven](https://en.wikipedia.org/wiki/Apache_Maven). You may use the following command:
 ```
