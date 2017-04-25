@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>fr.d2-si</groupId>
-    <artifactId>serverless-mapreduce-example-project</artifactId>
-    <version>1.0</version>
+    <groupId>fr.d2si</groupId>
+    <artifactId>serverless_mapreduce_example_project</artifactId>
+    <version>0.0.1</version>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -14,14 +14,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>fr.d2-si</groupId>
-            <artifactId>serverless-mapreduce</artifactId>
-            <version>1</version>
+            <groupId>fr.d2si</groupId>
+            <artifactId>serverless_mapreduce</artifactId>
+            <version>0.0.1</version>
         </dependency>
     </dependencies>
 
     <build>
-        <finalName>mapreduce</finalName>
+        <finalName>job</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
