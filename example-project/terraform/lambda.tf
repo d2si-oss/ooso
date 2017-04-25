@@ -55,75 +55,85 @@ resource "aws_iam_policy_attachment" "s3AccessAttachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
-resource "aws_lambda_function" "driver" {
-  filename = "../target/mapreduce.jar"
-  function_name = "driver"
+resource "aws_iam_policy_attachment" "sqsAccessAttachment" {
+  name = "sqsAccessAttachment"
+  roles = [
+    "${aws_iam_role.iamForLambda.name}"]
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+}
+
+resource "aws_lambda_function" "mappers_driver" {
+  filename = "../target/job.jar"
+  function_name = "mappers_driver"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "driver.Driver"
-  source_code_hash = "${base64sha256(file("../target/mapreduce.jar"))}"
+  handler = "fr.d2si.serverless_mapreduce.mappers_driver.MappersDriver"
+  source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "1536"
   timeout = "300"
 }
 
-resource "aws_lambda_function" "coordinator" {
-  filename = "../target/mapreduce.jar"
-  function_name = "coordinator"
+resource "aws_lambda_function" "reducers_driver" {
+  filename = "../target/job.jar"
+  function_name = "reducers_driver"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "coordinator.Coordinator"
-  source_code_hash = "${base64sha256(file("../target/mapreduce.jar"))}"
+  handler = "fr.d2si.serverless_mapreduce.reducers_driver.ReducersDriver"
+  source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "1536"
   timeout = "300"
 }
+
+//resource "aws_sqs_queue" "dlqQueue" {
+//  name = "dlqQueue"
+//}
 
 resource "aws_lambda_function" "mapper" {
-  filename = "../target/mapreduce.jar"
+  filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.mapperFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "mapper_wrapper.MapperWrapper"
-  source_code_hash = "${base64sha256(file("../target/mapreduce.jar"))}"
+  handler = "fr.d2si.serverless_mapreduce.mapper_wrapper.MapperWrapper"
+  source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "${data.external.jobInfo.result.mapperMemory}"
   timeout = "300"
+  //  dead_letter_config {
+  //    target_arn = "${aws_sqs_queue.dlqQueue.arn}"
+  //  }
 }
 
 resource "aws_lambda_function" "reducer" {
-  filename = "../target/mapreduce.jar"
+  filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.reducerFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "reducer_wrapper.ReducerWrapper"
-  source_code_hash = "${base64sha256(file("../target/mapreduce.jar"))}"
+  handler = "fr.d2si.serverless_mapreduce.reducer_wrapper.ReducerWrapper"
+  source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "${data.external.jobInfo.result.reducerMemory}"
   timeout = "300"
+  //  dead_letter_config {
+  //    target_arn = "${aws_sqs_queue.dlqQueue.arn}"
+  //  }
 }
 
 resource "aws_lambda_function" "mappersListener" {
-  filename = "../target/mapreduce.jar"
+  filename = "../target/job.jar"
   function_name = "mappers_listener"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "mappers_listener.MappersListener"
-  source_code_hash = "${base64sha256(file("../target/mapreduce.jar"))}"
+  handler = "fr.d2si.serverless_mapreduce.mappers_listener.MappersListener"
+  source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "1536"
   timeout = "300"
 }
 
-resource "aws_lambda_permission" "allow_bucket" {
-  statement_id = "AllowExecutionFromS3Bucket"
-  action = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.mappersListener.arn}"
-  principal = "s3.amazonaws.com"
-  source_arn = "${aws_s3_bucket.mapperOutputBucket.arn}"
-}
-
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = "${aws_s3_bucket.mapperOutputBucket.id}"
-  lambda_function {
-    lambda_function_arn = "${aws_lambda_function.mappersListener.arn}"
-    events = [
-      "s3:ObjectCreated:*"]
-    filter_prefix = "${data.external.jobInfo.result.jobId}"
-  }
+resource "aws_lambda_function" "reducersListener" {
+  filename = "../target/job.jar"
+  function_name = "reducers_listener"
+  role = "${aws_iam_role.iamForLambda.arn}"
+  handler = "fr.d2si.serverless_mapreduce.reducers_listener.ReducersListener"
+  source_code_hash = "${base64sha256(file("../target/job.jar"))}"
+  runtime = "java8"
+  memory_size = "1536"
+  timeout = "300"
 }
