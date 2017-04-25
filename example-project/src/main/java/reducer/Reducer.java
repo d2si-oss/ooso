@@ -1,8 +1,9 @@
 package reducer;
 
 import com.google.gson.Gson;
-import utils.Commons;
-import utils.ObjectInfoSimple;
+import fr.d2si.serverless_mapreduce.reducer.ReducerAbstract;
+import fr.d2si.serverless_mapreduce.utils.Commons;
+import fr.d2si.serverless_mapreduce.utils.ObjectInfoSimple;
 
 import java.io.BufferedReader;
 import java.io.IOException;
