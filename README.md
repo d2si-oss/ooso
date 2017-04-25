@@ -59,7 +59,7 @@ The structure is as follows :
         <dependency>
             <groupId>fr.d2si</groupId>
             <artifactId>serverless_mapreduce</artifactId>
-            <version>1</version>
+            <version>0.0.1</version>
         </dependency>
     ...
     </dependencies>
