@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/library-logo.png"/>
+  <img src="images/library-logo.png" width="20%"/>
 </p>
 
 
@@ -226,6 +226,8 @@ We already provided a Terraform [template file](./example-project/terraform) to 
  terraform apply
  ```
 For more info about Terraform, check [Terraform documentation](https://www.terraform.io/docs/) .
+
+___
 
 ## Running the job
 In order to run the job, we only need to invoke the mappers_driver function. You may use the following command:
