@@ -147,9 +147,9 @@ In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) 
 ```
 sudo apt-get install maven
 ```
-Then, run the following command in the root of your project directory in order to generate the jar file:
+Then, run `package.sh` script to generate the jobId and create the project jar:
 ```
-mvn package
+./package.sh
 ```
 
 You are now ready to proceed to the deployment of the necessary components.
