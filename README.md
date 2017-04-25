@@ -197,9 +197,9 @@ Our lambda functions need to have a role with specific policies attached to it t
 
     Note that these policies are too broad. You may use more fine-grained policies/roles for each lambda.
 
-[Attach a policy to a role using the console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html)
+    [Attach a policy to a role using the console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html)
 
-[Attach a policy to a role using the commandline](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html)
+    [Attach a policy to a role using the commandline](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html)
 
 
 ### Lambda functions
