@@ -143,10 +143,8 @@ A less than 0 value means that the values will be automatically computed.
 
 `disableReducer`: if set to "true", disables the reducer if your job doesn't need it.
 #### Project packaging
-In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#deployment) of the lambda, you need to install [maven](https://en.wikipedia.org/wiki/Apache_Maven). You may use the following command:
-```
-sudo apt-get install maven
-```
+In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#deployment) of the lambda, you need to [install maven](https://maven.apache.org/install.html).
+
 Then, run `package.sh` script to generate the jobId and create the project jar:
 ```
 ./package.sh
