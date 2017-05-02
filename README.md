@@ -232,5 +232,5 @@ ___
 ## Running the job
 In order to run the job, we only need to invoke the mappers_driver function. You may use the following command:
  ```
- aws lambda invoke mappers_driver /dev/null &
+ aws lambda invoke --function-name mappers_driver --invocation-type Event /dev/null
  ```
