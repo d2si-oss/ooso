@@ -219,7 +219,7 @@ There are six lambda functions to deploy. We assume that the project jar is loca
 [Create a lambda function using the commandline](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html)
 
 ### Deployment methods
-You may use any deployment method you are familiar with. We recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](https://aws.amazon.com/cloudformation/) . These tools make it straightforward to deploy infrastructure using template files, which enables infrastructure specs sharing and versioning.
+You may use any deployment method you are familiar with. We recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](https://aws.amazon.com/cloudformation/) . These tools make it straightforward to deploy infrastructure using template files, which enables infrastructure specs to be shared and versioned.
 
 We already provided a Terraform [template file](./example-project/terraform) to deploy the various resources of the architecture. You only need to [install Terraform](https://www.terraform.io/intro/getting-started/install.html), change the current directory to where the template files are located and launch the following command:
  ```
