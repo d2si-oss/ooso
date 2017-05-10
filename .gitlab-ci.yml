@@ -17,7 +17,7 @@ build_library_job:
     - "gem install fakes3"
     - "fakes3 -r /mnt/fakes3_root -p 4567 > /dev/null 2>&1 &"
     - "cd serverless-mapreduce"
-    - "mvn test"
+    - "mvn package"
     - "mvn -e org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file -Dfile=target/serverless_mapreduce.jar -DgroupId=fr.d2si -DartifactId=serverless_mapreduce -Dversion=0.0.1 -Dpackaging=jar -DlocalRepositoryPath=${HOME}/.m2/repository/"
     - "cd ../example-project"
     - "./package.sh"
