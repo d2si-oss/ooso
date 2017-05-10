@@ -1,1 +1,13 @@
-{"reducerMemory": "1536", "mapperOutputBucket": "mappers-bucket", "jobId": "95bf5dec-34b1-11e7-8072-34f39a0a3e44", "mapperFunctionName": "mapper", "mapperMemory": "1536", "reducerOutputBucket": "reducers-bucket", "reducerFunctionName": "reducer", "reducerForceBatchSize": "-1", "disableReducer": "false", "jobInputBucket": "my-dataset/500mb", "mapperForceBatchSize": "-1"}
+{
+  "reducerMemory": "1536",
+  "disableReducer": "false",
+  "mapperMemory": "1536",
+  "mapperFunctionName": "mapper",
+  "reducerForceBatchSize": "-1",
+  "reducerOutputBucket": "reducers-bucket",
+  "mapperOutputBucket": "mappers-bucket",
+  "reducerFunctionName": "reducer",
+  "jobId": "f4a88b72-357d-11e7-9140-34f39a0a3e44",
+  "jobInputBucket": "test-data/250mb",
+  "mapperForceBatchSize": "-1"
+}
