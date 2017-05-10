@@ -13,8 +13,7 @@ build_library_job:
   stage: build
   script:
     - "apt update"
-    - "apt -y install rubygems jq python3-pip"
-    - "pip3 install awscli"
+    - "apt -y install rubygems python3-pip"
     - "gem install fakes3"
     - "fakes3 -r /mnt/fakes3_root -p 4567 > /dev/null 2>&1 &"
     - "cd serverless-mapreduce"

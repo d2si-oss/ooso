@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -26,7 +27,6 @@ public class Commons {
     }
 
     public static List<S3ObjectSummary> getBucketObjectSummaries(String bucket, String prefix) {
-
         String realBucket = getBucketFromFullPath(bucket);
         String preprefix = getPrefixFromFullPath(bucket);
 
@@ -52,10 +52,12 @@ public class Commons {
 
     public static String getPrefixFromFullPath(String path) {
         String realBucket = getBucketFromFullPath(path);
-        return realBucket.equals(path) ? "" : path.substring(path.indexOf("/") + 1, path.length());
+        String prefix = realBucket.equals(path) ? "" : path.substring(path.indexOf("/") + 1, path.length());
+        prefix = prefix.endsWith("/") ? prefix.substring(0, prefix.length() - 1) : prefix;
+        return prefix;
     }
 
-    private static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {
+    public static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {
         int maxUsableMemory = (int) (0.6 * 1024 * 1024 * availableMemory);
         long totalSize = 0;
         for (S3ObjectSummary summary : objectSummaries)
@@ -78,6 +80,17 @@ public class Commons {
                 destKey,
                 new StringInputStream(content),
                 metadata);
+    }
+
+    public static void storeObject(String contentType,
+                                   File content,
+                                   String destBucket,
+                                   String destKey) throws UnsupportedEncodingException {
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
+
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(contentType);
+        s3Client.putObject(new PutObjectRequest(destBucket, destKey, content).withMetadata(metadata));
     }
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
@@ -127,6 +140,19 @@ public class Commons {
                 .withPayload(payloadString);
 
         lambda.invoke(request);
+    }
+
+    public static void emptyBucketWithPrefix(String bucket, String prefix) {
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
+
+        List<S3ObjectSummary> files = Commons.getBucketObjectSummaries(bucket, prefix);
+
+        for (S3ObjectSummary object : files)
+            s3Client.deleteObject(object.getBucketName(), object.getKey());
+    }
+
+    public static void emptyBucket(String bucket) {
+        emptyBucketWithPrefix(bucket, "");
     }
 
     public static void invokeLambdaAsync(String function, Object payload) {
