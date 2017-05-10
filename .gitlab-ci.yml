@@ -7,10 +7,10 @@ variables:
   AWS_DEFAULT_REGION: "eu-west-1"
 
 stages:
-  - build
+  - test
 
-build_library_job:
-  stage: build
+test_library_job:
+  stage: test
   script:
     - "apt update"
     - "apt -y install rubygems python3-pip"
