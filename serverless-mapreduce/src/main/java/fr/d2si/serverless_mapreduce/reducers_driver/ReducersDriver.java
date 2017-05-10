@@ -29,8 +29,8 @@ public class ReducersDriver implements RequestHandler<ReducersDriverInfo, String
 
             launchReducers(reducersDriverInfo.getStep());
 
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return "OK";
     }

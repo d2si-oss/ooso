@@ -40,7 +40,7 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
             processBatch(batch);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return "OK";
     }

@@ -27,10 +27,9 @@ public class MappersListener implements RequestHandler<Void, String> {
             }
 
             return String.valueOf(currentMappersOutputFiles == expectedMappersOutputFiles);
-        } catch (Throwable ignored) {
-            ignored.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return "Ok";
     }
 
     private void invokeMappersListener() {

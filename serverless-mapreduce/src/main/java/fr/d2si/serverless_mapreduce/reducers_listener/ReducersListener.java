@@ -34,8 +34,8 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
                 }
             }
 
-        } catch (Throwable ignored) {
-            ignored.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return null;
     }

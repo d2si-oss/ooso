@@ -40,7 +40,7 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
             storeResult(reduceResult, this.reducerWrapperInfo.isLast());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return "OK";
     }
