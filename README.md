@@ -112,7 +112,7 @@ You can use the utility method `Commons.getReaderFromObjectInfo(ObjectInfoSimple
 
 
 #### Configuration file
-The `jsonInfo.json` file located at src/main/resources holds various configuration options of the job.
+The `jobInfo.json` file located at src/main/resources holds various configuration options of the job.
 ```json
 {
     "jobId": "",
@@ -124,7 +124,7 @@ The `jsonInfo.json` file located at src/main/resources holds various configurati
     "reducerMemory": "1536",
     "mapperMemory": "1536",
     "mapperForceBatchSize": "-1",
-    "reducerForceBatchSize": "-1"
+    "reducerForceBatchSize": "-1",
     "disableReducer": "false"
 }
 ```
