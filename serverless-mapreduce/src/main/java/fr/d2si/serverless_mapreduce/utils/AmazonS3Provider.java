@@ -22,6 +22,7 @@ public class AmazonS3Provider {
         private static final AmazonS3 S3_CLIENT = AmazonS3ClientBuilder.standard()
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://0.0.0.0:4567", "eu-west-1"))
                 .withChunkedEncodingDisabled(true)
+                .withPathStyleAccessEnabled(true)
                 .build();
     }
 

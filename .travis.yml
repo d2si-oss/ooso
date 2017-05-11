@@ -1,0 +1,24 @@
+language: java
+
+jdk:
+  - oraclejdk8
+
+env:
+  - SMR_STAGE=DEV AWS_ACCESS_KEY_ID=123 AWS_SECRET_ACCESS_KEY=123 AWS_DEFAULT_REGION=eu-west-1
+
+addons:
+  apt:
+    packages:
+      - ruby
+      - python3
+
+install: gem install fakes3
+
+script:
+  - fakes3 -r ~/fakes3 -p 4567 > /dev/null 2>&1 &
+  - sleep 5
+  - cd serverless-mapreduce
+  - mvn package
+  - mvn -e org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file -Dfile=target/serverless_mapreduce.jar -DgroupId=fr.d2si -DartifactId=serverless_mapreduce -Dversion=0.0.1 -Dpackaging=jar -DlocalRepositoryPath=${HOME}/.m2/repository/
+  - cd ../example-project
+  - ./package.sh
