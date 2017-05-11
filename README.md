@@ -2,6 +2,7 @@
   <img src="images/library-logo.png" width="20%"/>
 </p>
 
+[![Build Status](https://travis-ci.org/d2si-oss/demo-aws-lambda-mapreduce.svg?branch=master)](https://travis-ci.org/d2si-oss/demo-aws-lambda-mapreduce)
 
 This is a serverless implementation of the MapReduce algorithm.
 It is based on managed cloud services, [Amazon Simple Storage Service](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools.
