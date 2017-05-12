@@ -19,6 +19,6 @@ script:
   - sleep 5
   - cd serverless-mapreduce
   - mvn package
-  - mvn -e org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file -Dfile=target/serverless_mapreduce.jar -DgroupId=fr.d2si -DartifactId=serverless_mapreduce -Dversion=0.0.1 -Dpackaging=jar -DlocalRepositoryPath=${HOME}/.m2/repository/
+  - mvn -e org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file -Dfile=target/serverless_mapreduce-0.0.1.jar -DgroupId=fr.d2si -DartifactId=serverless_mapreduce -Dversion=0.0.1 -Dpackaging=jar -DlocalRepositoryPath=${HOME}/.m2/repository/
   - cd ../example-project
   - ./package.sh
