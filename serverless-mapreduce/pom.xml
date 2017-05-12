@@ -7,6 +7,36 @@
     <groupId>fr.d2si</groupId>
     <artifactId>serverless_mapreduce</artifactId>
     <version>0.0.1</version>
+
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>This is a serverless implementation of the MapReduce algorithm. It is based on managed cloud services,
+        Amazon Simple Storage Service and AWS Lambda and is mainly an alternative to standard ad-hoc querying and batch
+        processing tools.
+    </description>
+    <url>https://github.com/d2si-oss/demo-aws-lambda-mapreduce</url>
+
+    <licenses>
+        <license>
+            <name>ISC License</name>
+            <url>https://github.com/d2si-oss/demo-aws-lambda-mapreduce/blob/master/LICENSE</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Othmane Nahyl</name>
+            <email>othmane.nahyl@d2-si.eu</email>
+            <organization>D2SI</organization>
+            <organizationUrl>http://www.d2-si.fr</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/d2si-oss/demo-aws-lambda-mapreduce.git</connection>
+        <developerConnection>scm:git:ssh://github.com/d2si-oss/demo-aws-lambda-mapreduce.git</developerConnection>
+        <url>https://github.com/d2si-oss/demo-aws-lambda-mapreduce/tree/master</url>
+    </scm>
+
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -42,15 +72,17 @@
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.11.109</version>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
     <build>
-        <finalName>serverless_mapreduce</finalName>
+        <finalName>${artifactId}-${version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
