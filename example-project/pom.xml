@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>fr.d2si</groupId>
+    <groupId>fr.d2-si</groupId>
     <artifactId>serverless_mapreduce_example_project</artifactId>
     <version>0.0.1</version>
     <properties>
@@ -14,7 +14,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>fr.d2si</groupId>
+            <groupId>fr.d2-si</groupId>
             <artifactId>serverless_mapreduce</artifactId>
             <version>0.0.1</version>
         </dependency>
@@ -22,8 +22,16 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/groups/public</url>
+        </repository>
+    </repositories>
 
     <build>
         <finalName>job</finalName>
