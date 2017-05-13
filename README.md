@@ -58,25 +58,12 @@ The structure is as follows :
     <dependencies>
     ...
         <dependency>
-            <groupId>fr.d2si</groupId>
+            <groupId>fr.d2-si</groupId>
             <artifactId>serverless_mapreduce</artifactId>
             <version>0.0.1</version>
         </dependency>
     ...
     </dependencies>
-```
-
-The dependency should ideally be in the maven repository, but for now we need it to be in our local repo.
-This command should be able to do just that:
-
-```commandline
-mvn -e org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file
-    -Dfile=example-project/jars/serverless_mapreduce.jar
-    -DgroupId=fr.d2si
-    -DartifactId=serverless_mapreduce
-    -Dversion=0.0.1
-    -Dpackaging=jar
-    -DlocalRepositoryPath=~/.m2/repository/
 ```
 
 You may add any dependency needed in subsequent steps.
