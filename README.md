@@ -5,26 +5,27 @@
 [![Build Status](https://travis-ci.org/d2si-oss/demo-aws-lambda-mapreduce.svg?branch=master)](https://travis-ci.org/d2si-oss/demo-aws-lambda-mapreduce)
 
 This is a serverless implementation of the MapReduce algorithm.
-It is based on managed cloud services, [Amazon Simple Storage Service](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools.
+It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/) .
 
 ## Table of contents
 
-  * [Architecture and workflow](#architecture-and-workflow)
-  * [How to use](#how-to-use)
-    * [Library dependency](#library-dependency)
-    * [Classes to implement](#classes-to-implement)
-    * [Configuration file](#configuration-file)
-    * [Project packaging](#project-packaging)
-  * [Deployment](#deployment)
-    * [S3 Buckets](#s3-buckets)
-    * [IAM Roles and policies](#iam-roles-and-policies)
-    * [Lambda functions](#lambda-functions)
-    * [Deployment methods](#deployment-methods)
-  * [Running the job](#running-the-job)
+  * [I-Architecture and workflow](#i-architecture-and-workflow)
+  * [II-How to use the library](#ii-how-to-use-the-library)
+    * [1-Project structure](#1-project-structure)
+    * [2-Library dependency](#2-library-dependency)
+    * [3-Classes to implement](#3-classes-to-implement)
+    * [4-Configuration file](#4-configuration-file)
+    * [5-Project packaging](#5-project-packaging)
+  * [III-AWS Infrastructure](#iii-aws-infrastructure)
+    * [1-S3 Buckets](#1-s3-buckets)
+    * [2-IAM Roles and policies](#2-iam-roles-and-policies)
+    * [3-Lambda functions](#3-lambda-functions)
+    * [4-Deployment](#4-deployment)
+  * [IV-Running the job](#iv-running-the-job)
 
 ___
 
-## Architecture and workflow
+## I-Architecture and workflow
 <p align="center">
   <img src="images/MyArchitecture.png"/>
 </p>
@@ -43,16 +44,29 @@ The library workflow is as follows:
 
 ___
 
-## How to use
-The [example-project](example-project) directory contains basic mandatory structure for any project using the library.
-The structure is as follows :
+## II-How to use the library
+### 1-Project Structure
+The easiest way is to clone the repository and use the provided [example-project](example-project) directory which has the following structure:
 
-<p align="center">
-  <img src="images/directory_tree.png"/>
-</p>
+```
+.
+├── package.sh
+├── generate_job_id.py
+├── provide_job_info.py
+├── pom.xml
+└── src
+    └── main
+        ├── java
+        │   ├── mapper
+        │   │   └── Mapper.java
+        │   └── reducer
+        │       └── Reducer.java
+        └── resources
+            └── jobInfo.json
+```
 
-#### Library dependency
-`pom.xml` should contain the library dependency
+### 2-Library dependency
+Declare the library dependency in the `pom.xml` file
 
 ```xml
     <dependencies>
@@ -66,18 +80,15 @@ The structure is as follows :
     </dependencies>
 ```
 
-You may add any dependency needed in subsequent steps.
-
-#### Classes to implement
-Below is a description of the classes you need to implement in order to run a MapReduce job
-
+### 3-Classes to implement
+Implement your `Mapper` and `Reducer`.
 - The class [Mapper](example-project/src/main/java/mapper/Mapper.java) is the implementation of your mappers. It must extend the `fr.d2si.serverless_mapreduce.mapper.MapperAbstract` class which looks like the following:
     ```java
     public abstract class MapperAbstract {
         public abstract String map(BufferedReader objectBufferedReader);
     }
     ```
-The `map` method receives a `BufferedReader` as a parameter which is a reader of the batch part that the mapper lambda processes. The Reader closing is done internally for you.
+    The `map` method receives a `BufferedReader` as a parameter which is a reader of the batch part that the mapper lambda processes. The Reader closing is done internally for you.
 
 - The class [Reducer](example-project/src/main/java/reducer/Reducer.java) is the implementation of your reducers. It must extend the `fr.d2si.serverless_mapreduce.reducer.ReducerAbstract` class which looks like the following:
     ```java
@@ -85,27 +96,26 @@ The `map` method receives a `BufferedReader` as a parameter which is a reader of
         public abstract String reduce(List<ObjectInfoSimple> batch);
     }
     ```
-The `reduce` method receives a list of `ObjectInfoSimple` instances, which encapsulate information about the objects to be reduced such as the s3 source bucket and key.
-The `ObjectInfoSimple` looks like this:
+    The `reduce` method receives a list of `ObjectInfoSimple` instances, which encapsulate information about the objects to be reduced such as the s3 source bucket and key.
+    The `ObjectInfoSimple` looks like this:
     ```java
     public class ObjectInfoSimple {
         private String bucket;
         private String key;
-        ...
-    }
+            ...
+        }
     ```
-You can use the utility method `Commons.getReaderFromObjectInfo(ObjectInfoSimple info)` to open a reader of the object passed as a parameter.
+    You can use the utility method `Commons.getReaderFromObjectInfo(ObjectInfoSimple info)` to open a reader of the object passed as a parameter.
 **For the reducer, you are responsible of closing the opened readers.**
 
-
-#### Configuration file
-The `jobInfo.json` file located at src/main/resources holds various configuration options of the job.
+### 4-Configuration file
+Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details.
 ```json
 {
     "jobId": "",
-    "jobInputBucket": "dataset",
-    "mapperOutputBucket": "map-output",
-    "reducerOutputBucket": "reduce-output",
+    "jobInputBucket": "input",
+    "mapperOutputBucket": "mapper-output",
+    "reducerOutputBucket": "reducer-output",
     "reducerFunctionName": "reducer",
     "mapperFunctionName": "mapper",
     "reducerMemory": "1536",
@@ -116,48 +126,44 @@ The `jobInfo.json` file located at src/main/resources holds various configuratio
 }
 ```
 
-`jobId` is automatically set.
+Below is the description of each attribute.
 
-`jobInputBucket` contains the dataset splits that each `Mapper` will process.
+| Attribute| Description|
+|:-------------:|:-------------:|
+|jobId|automatically set|
+|jobInputBucket|contains the dataset splits that each `Mapper` will process|
+|mapperOutputBucket|the bucket where the mappers will put their results|
+|reducerOutputBucket|the bucket where the reducers will put their results|
+|reducerMemory and mapperMemory|the amount of memory(and therefore other resources) allocated to the lambda functions. They are used internally by the library to compute the batch size that each mapper/reducer will process.|
+|mapperForceBatchSize and reducerForceBatchSize|used to force the library to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**|
+|disableReducer|if set to "true", disables the reducer|
 
-`mapperOutputBucket` is the bucket where the mappers will put their results.
-
-`reducerOutputBucket` is the bucket where the reducers will put their results.
-
-`reducerMemory` and `mapperMemory` are the amount of memory(and therefore other resources) allocated to the lambda functions. They are used internally by the library to compute the batch size that each mapper/reducer will process.
-
-`mapperForceBatchSize` and `reducerForceBatchSize` are used to force the library to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**.
-A less than 0 value means that the values will be automatically computed.
-
-`disableReducer`: if set to "true", disables the reducer if your job doesn't need it.
-#### Project packaging
-In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#deployment) of the lambda, you need to [install maven](https://maven.apache.org/install.html).
+### 5-Project packaging
+In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#4-deployment) of the lambda, you need to [install maven](https://maven.apache.org/install.html).
 
 Then, run `package.sh` script to generate the jobId and create the project jar:
 ```
 ./package.sh
 ```
-
-You are now ready to proceed to the deployment of the necessary components.
 ___
 
-## Deployment
-In order to be able to use the library, you need to deploy the following resources.
-### S3 Buckets
-S3 buckets are the containers that the mappers and reducers will use to fetch the files to process and to put the results of their processing.
+## III-AWS Infrastructure
+Before diving into the infrastructure details, please have a look at the [deployment](#4-deployment) section.
+### 1-S3 Buckets
+Our lambda functions use S3 Buckets to fetch needed files and put the result of their processing.
 
-You need three buckets, one containing your dataset splits and two others for the mappers and reducers.
+You need three buckets:
 
-You must use the same bucket names used in the configuration step above.
+   - An input bucket containing your data splits
+   - Two intermediary buckets used by the mappers and reducers
 
-[Create S3 Buckets using the console](http://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-bucket.html)
+You must use the same bucket names used in the [configuration](#4-configuration-file) step above.
 
-[Create S3 Buckets using the commandline](http://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html)
+You may create the buckets using the [console](http://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-bucket.html) , the [command line](http://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html) or our [Terraform template]() .
 
-### IAM Roles and policies
-Our lambda functions need to have a role with specific policies attached to it to be authorized to access the various services used by the library.
+### 2-IAM Roles and policies
 
-1. You first need to create the role with the following trust policy:
+1. Create an IAM role with the following trust policy:
 
     ```json
     {
@@ -173,50 +179,54 @@ Our lambda functions need to have a role with specific policies attached to it t
         ]
     }
     ```
-    [Create a IAM role using the console](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console)
 
-    [Create a IAM role using the commandline](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-cli)
+You may create the IAM role using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console) , the [command line](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-cli) or our [Terraform template](./example-project/terraform) .
 
-2. You must then attach policies with the following arn's to your newly created role:
+2. Attach the following policies to your role:
     - `arn:aws:iam::aws:policy/AWSLambdaFullAccess`
     - `arn:aws:iam::aws:policy/AmazonS3FullAccess`
 
     Note that these policies are too broad. You may use more fine-grained policies/roles for each lambda.
 
-    [Attach a policy to a role using the console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html)
+You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html) , the [command line](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html) or our [Terraform template](./example-project/terraform) .
 
-    [Attach a policy to a role using the commandline](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html)
-
-
-### Lambda functions
-There are six lambda functions to deploy. We assume that the project jar is located at `example-project/target/job.jar`. Following are the deployment details:
+### 3-Lambda functions
+Create the required lambdas with the following details:
 
 | Lambda Name   | Handler       |Memory|Function package|Runtime|
 |:-------------:|:-------------:|:----:|:----:|:----:|
-| mappers_driver| fr.d2si.serverless_mapreduce.mappers_driver.MappersDriver | anything you want|example-project/target/job.jar|java8|
-| mappers_listener| fr.d2si.serverless_mapreduce.mappers_listener.MappersListener | anything you want|example-project/target/job.jar|java8|
-| mapper     | fr.d2si.serverless_mapreduce.mapper_wrapper.MapperWrapper | same used in the [configuration file](#configuration-file)  |example-project/target/job.jar|java8|
-| reducers_driver| fr.d2si.serverless_mapreduce.reducers_driver.ReducersDriver | anything you want|example-project/target/job.jar|java8|
-| reducers_listener| fr.d2si.serverless_mapreduce.reducers_listener.ReducersListener | anything you want|example-project/target/job.jar|java8|
-| reducer     | fr.d2si.serverless_mapreduce.reducer_wrapper.ReducerWrapper | same used in the [configuration file](#configuration-file)  |example-project/target/job.jar|java8|
+| mappers_driver| fr.d2si.serverless_mapreduce.mappers_driver.MappersDriver | 1536 |example-project/target/job.jar|java8|
+| mappers_listener| fr.d2si.serverless_mapreduce.mappers_listener.MappersListener | 1536|example-project/target/job.jar|java8|
+| mapper     | fr.d2si.serverless_mapreduce.mapper_wrapper.MapperWrapper | same used in the [configuration file](#4-configuration-file)  |example-project/target/job.jar|java8|
+| reducers_driver| fr.d2si.serverless_mapreduce.reducers_driver.ReducersDriver | 1536|example-project/target/job.jar|java8|
+| reducers_listener| fr.d2si.serverless_mapreduce.reducers_listener.ReducersListener | 1536|example-project/target/job.jar|java8|
+| reducer     | fr.d2si.serverless_mapreduce.reducer_wrapper.ReducerWrapper | same used in the [configuration file](#4-configuration-file)  |example-project/target/job.jar|java8|
 
-[Create a lambda function using the console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html)
+We assume that the project jar is located at `example-project/target/job.jar`.
 
-[Create a lambda function using the commandline](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html)
+You may attach the policies using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) , the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./example-project/terraform) .
 
-### Deployment methods
-You may use any deployment method you are familiar with. We recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](https://aws.amazon.com/cloudformation/) . These tools make it straightforward to deploy infrastructure using template files, which enables infrastructure specs to be shared and versioned.
+### 4-Deployment
+1. The easy way 😁
 
-We already provided a Terraform [template file](./example-project/terraform) to deploy the various resources of the architecture. You only need to [install Terraform](https://www.terraform.io/intro/getting-started/install.html), change the current directory to where the template files are located and launch the following command:
- ```
- terraform apply
- ```
+   We provide a fully functional Terraform template that creates everything for you, except the input bucket. This template uses the job configuration file.
+   Here is how to use it:
+    - [install Terraform](https://www.terraform.io/intro/getting-started/install.html)
+    - Make sure your job configuration file is correct
+    - cd [terraform](./example-project/terraform)
+    - terraform plan
+    - terraform apply
+
 For more info about Terraform, check [Terraform documentation](https://www.terraform.io/docs/) .
 
+2. The less easy way 😓
+
+    You may use any deployment method you are familiar with. The AWS console, the AWS cli, python scripts, ...
+    However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](aws.amazon.com/cloudformation‎) .
 ___
 
-## Running the job
-In order to run the job, we only need to invoke the mappers_driver function. You may use the following command:
+## IV-Running the job
+All you need is to run the `mappers_driver` function
  ```
- aws lambda invoke --function-name mappers_driver --invocation-type Event /dev/null
+aws lambda invoke --function-name mappers_driver --invocation-type Event /dev/null
  ```
