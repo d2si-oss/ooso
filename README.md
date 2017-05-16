@@ -207,7 +207,7 @@ We assume that the project jar is located at `example-project/target/job.jar`.
 You may attach the policies using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) , the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./example-project/terraform/lambda.tf) .
 
 ### 4-Deployment
-1. The easy way 😁
+1. The easy way
 
    We provide a fully functional Terraform template that creates everything for you, except the input bucket. This template uses the job configuration file.
    Here is how to use it:
@@ -219,7 +219,7 @@ You may attach the policies using the [console](http://docs.aws.amazon.com/lambd
 
 For more info about Terraform, check [Terraform documentation](https://www.terraform.io/docs/) .
 
-2. The less easy way 😓
+2. The less easy way
 
     You may use any deployment method you are familiar with. The AWS console, the AWS cli, python scripts, ...
     However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](aws.amazon.com/cloudformation‎) .
