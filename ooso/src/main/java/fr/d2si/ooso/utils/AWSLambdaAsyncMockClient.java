@@ -82,7 +82,6 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
                 throw new RuntimeException("This client supports async invocations only.");
 
             String functionName = invokeRequest.getFunctionName();
-            System.out.println(functionName);
             ByteBuffer payload = invokeRequest.getPayload();
 
             String functionClassName = lambdaHandlerMapping.get(functionName);
