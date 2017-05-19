@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import fr.d2si.serverless_mapreduce.mapper.MapperAbstract;
+import fr.d2si.ooso.mapper.MapperAbstract;
 
 public class Mapper extends MapperAbstract {
 

@@ -5,14 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>fr.d2-si</groupId>
-    <artifactId>serverless_mapreduce</artifactId>
+    <artifactId>ooso</artifactId>
     <version>0.0.1</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>This is a serverless implementation of the MapReduce algorithm. It is based on managed cloud services,
-        Amazon Simple Storage Service and AWS Lambda and is mainly an alternative to standard ad-hoc querying and batch
-        processing tools.
-    </description>
+    <description>Ooso is a serverless implementation of the MapReduce algorithm. It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/) .</description>
     <url>https://github.com/d2si-oss/demo-aws-lambda-mapreduce</url>
 
     <licenses>

@@ -3,7 +3,7 @@ package integration_test;
 import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.s3.AmazonS3;
-import fr.d2si.serverless_mapreduce.utils.*;
+import fr.d2si.ooso.utils.*;
 import org.junit.*;
 import org.junit.Test;
 
