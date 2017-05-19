@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/library-logo.png" width="20%"/>
+  <img src="images/library-logo.png" width="35%"/>
 </p>
 
 [![Build Status](https://travis-ci.org/d2si-oss/demo-aws-lambda-mapreduce.svg?branch=master)](https://travis-ci.org/d2si-oss/demo-aws-lambda-mapreduce)
 
-This is a serverless implementation of the MapReduce algorithm.
+Ooso is a serverless implementation of the MapReduce algorithm.
 It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/) .
 
 ## Table of contents
@@ -73,7 +73,7 @@ Declare the library dependency in the `pom.xml` file
     ...
         <dependency>
             <groupId>fr.d2-si</groupId>
-            <artifactId>serverless_mapreduce</artifactId>
+            <artifactId>ooso</artifactId>
             <version>0.0.1</version>
         </dependency>
     ...
@@ -82,7 +82,7 @@ Declare the library dependency in the `pom.xml` file
 
 ### 3-Classes to implement
 Implement your `Mapper` and `Reducer`.
-- The class [Mapper](example-project/src/main/java/mapper/Mapper.java) is the implementation of your mappers. It must extend the `fr.d2si.serverless_mapreduce.mapper.MapperAbstract` class which looks like the following:
+- The class [Mapper](example-project/src/main/java/mapper/Mapper.java) is the implementation of your mappers. It must extend the `fr.d2si.ooso.mapper.MapperAbstract` class which looks like the following:
     ```java
     public abstract class MapperAbstract {
         public abstract String map(BufferedReader objectBufferedReader);
@@ -90,7 +90,7 @@ Implement your `Mapper` and `Reducer`.
     ```
     The `map` method receives a `BufferedReader` as a parameter which is a reader of the batch part that the mapper lambda processes. The Reader closing is done internally for you.
 
-- The class [Reducer](example-project/src/main/java/reducer/Reducer.java) is the implementation of your reducers. It must extend the `fr.d2si.serverless_mapreduce.reducer.ReducerAbstract` class which looks like the following:
+- The class [Reducer](example-project/src/main/java/reducer/Reducer.java) is the implementation of your reducers. It must extend the `fr.d2si.ooso.reducer.ReducerAbstract` class which looks like the following:
     ```java
     public abstract class ReducerAbstract {
         public abstract String reduce(List<ObjectInfoSimple> batch);
@@ -195,12 +195,12 @@ Create the required lambdas with the following details:
 
 | Lambda Name   | Handler       |Memory|Function package|Runtime|
 |:-------------:|:-------------:|:----:|:----:|:----:|
-| mappers_driver| fr.d2si.serverless_mapreduce.mappers_driver.MappersDriver | 1536 |example-project/target/job.jar|java8|
-| mappers_listener| fr.d2si.serverless_mapreduce.mappers_listener.MappersListener | 1536|example-project/target/job.jar|java8|
-| mapper     | fr.d2si.serverless_mapreduce.mapper_wrapper.MapperWrapper | same used in the [configuration file](#4-configuration-file)  |example-project/target/job.jar|java8|
-| reducers_driver| fr.d2si.serverless_mapreduce.reducers_driver.ReducersDriver | 1536|example-project/target/job.jar|java8|
-| reducers_listener| fr.d2si.serverless_mapreduce.reducers_listener.ReducersListener | 1536|example-project/target/job.jar|java8|
-| reducer     | fr.d2si.serverless_mapreduce.reducer_wrapper.ReducerWrapper | same used in the [configuration file](#4-configuration-file)  |example-project/target/job.jar|java8|
+| mappers_driver| fr.d2si.ooso.mappers_driver.MappersDriver | 1536 |example-project/target/job.jar|java8|
+| mappers_listener| fr.d2si.ooso.mappers_listener.MappersListener | 1536|example-project/target/job.jar|java8|
+| mapper     | fr.d2si.ooso.mapper_wrapper.MapperWrapper | same used in the [configuration file](#4-configuration-file)  |example-project/target/job.jar|java8|
+| reducers_driver| fr.d2si.ooso.reducers_driver.ReducersDriver | 1536|example-project/target/job.jar|java8|
+| reducers_listener| fr.d2si.ooso.reducers_listener.ReducersListener | 1536|example-project/target/job.jar|java8|
+| reducer     | fr.d2si.ooso.reducer_wrapper.ReducerWrapper | same used in the [configuration file](#4-configuration-file)  |example-project/target/job.jar|java8|
 
 We assume that the project jar is located at `example-project/target/job.jar`.
 
@@ -230,3 +230,7 @@ All you need is to run the `mappers_driver` function
  ```
 aws lambda invoke --function-name mappers_driver --invocation-type Event /dev/null
  ```
+
+___
+
+ <div>Icons made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
