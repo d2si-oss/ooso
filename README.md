@@ -2,7 +2,7 @@
   <img src="images/library-logo.png" width="35%"/>
 </p>
 
-[![Build Status](https://travis-ci.org/d2si-oss/demo-aws-lambda-mapreduce.svg?branch=master)](https://travis-ci.org/d2si-oss/demo-aws-lambda-mapreduce)
+[![Build Status](https://travis-ci.org/d2si-oss/ooso.svg?branch=master)](https://travis-ci.org/d2si-oss/ooso)
 
 Ooso is a serverless implementation of the MapReduce algorithm.
 It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/) .
