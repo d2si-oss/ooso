@@ -15,16 +15,18 @@ public class MappersListener implements RequestHandler<Void, String> {
         try {
             JobInfo jobInfo = JobInfoProvider.getJobInfo();
 
-            int currentMappersOutputFiles = Commons.getBucketObjectSummaries(jobInfo.getMapperOutputBucket(), jobInfo.getJobId()).size();
+            int currentMappersOutputFiles =
+                    !jobInfo.getDisableReducer() ? Commons.getBucketObjectSummaries(jobInfo.getMapperOutputBucket(), jobInfo.getJobId()).size() :
+                            Commons.getBucketObjectSummaries(jobInfo.getReducerOutputBucket(), jobInfo.getJobId()).size();
+
             int expectedMappersOutputFiles = Commons.getBucketObjectSummaries(jobInfo.getJobInputBucket()).size();
 
-            if (!jobInfo.getDisableReducer()) {
-                if (currentMappersOutputFiles == expectedMappersOutputFiles)
+            if (currentMappersOutputFiles == expectedMappersOutputFiles) {
+                if (!jobInfo.getDisableReducer())
                     invokeReducerCoordinator();
-                else {
-                    Thread.sleep(HEARTBEAT_INTERVAL);
-                    invokeMappersListener();
-                }
+            } else {
+                Thread.sleep(HEARTBEAT_INTERVAL);
+                invokeMappersListener();
             }
 
             return String.valueOf(currentMappersOutputFiles == expectedMappersOutputFiles);
