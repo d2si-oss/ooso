@@ -55,18 +55,11 @@ resource "aws_iam_policy_attachment" "s3AccessAttachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
-resource "aws_iam_policy_attachment" "sqsAccessAttachment" {
-  name = "sqsAccessAttachment"
-  roles = [
-    "${aws_iam_role.iamForLambda.name}"]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
-}
-
 resource "aws_lambda_function" "mappers_driver" {
   filename = "../target/job.jar"
   function_name = "mappers_driver"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "fr.d2si.serverless_mapreduce.mappers_driver.MappersDriver"
+  handler = "fr.d2si.ooso.mappers_driver.MappersDriver"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "1536"
@@ -77,50 +70,40 @@ resource "aws_lambda_function" "reducers_driver" {
   filename = "../target/job.jar"
   function_name = "reducers_driver"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "fr.d2si.serverless_mapreduce.reducers_driver.ReducersDriver"
+  handler = "fr.d2si.ooso.reducers_driver.ReducersDriver"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "1536"
   timeout = "300"
 }
 
-//resource "aws_sqs_queue" "dlqQueue" {
-//  name = "dlqQueue"
-//}
-
 resource "aws_lambda_function" "mapper" {
   filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.mapperFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "fr.d2si.serverless_mapreduce.mapper_wrapper.MapperWrapper"
+  handler = "fr.d2si.ooso.mapper_wrapper.MapperWrapper"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "${data.external.jobInfo.result.mapperMemory}"
   timeout = "300"
-  //  dead_letter_config {
-  //    target_arn = "${aws_sqs_queue.dlqQueue.arn}"
-  //  }
 }
 
 resource "aws_lambda_function" "reducer" {
   filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.reducerFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "fr.d2si.serverless_mapreduce.reducer_wrapper.ReducerWrapper"
+  handler = "fr.d2si.ooso.reducer_wrapper.ReducerWrapper"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "${data.external.jobInfo.result.reducerMemory}"
   timeout = "300"
-  //  dead_letter_config {
-  //    target_arn = "${aws_sqs_queue.dlqQueue.arn}"
-  //  }
 }
 
 resource "aws_lambda_function" "mappersListener" {
   filename = "../target/job.jar"
   function_name = "mappers_listener"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "fr.d2si.serverless_mapreduce.mappers_listener.MappersListener"
+  handler = "fr.d2si.ooso.mappers_listener.MappersListener"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "1536"
@@ -131,7 +114,7 @@ resource "aws_lambda_function" "reducersListener" {
   filename = "../target/job.jar"
   function_name = "reducers_listener"
   role = "${aws_iam_role.iamForLambda.arn}"
-  handler = "fr.d2si.serverless_mapreduce.reducers_listener.ReducersListener"
+  handler = "fr.d2si.ooso.reducers_listener.ReducersListener"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
   memory_size = "1536"
