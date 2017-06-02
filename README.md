@@ -97,17 +97,21 @@ Implement your `Mapper` and `Reducer`.
         public abstract String reduce(List<ObjectInfoSimple> batch);
     }
     ```
-    The `reduce` method receives a list of `ObjectInfoSimple` instances, which encapsulate information about the objects to be reduced such as the s3 source bucket and key.
-    The `ObjectInfoSimple` looks like this:
+    The `reduce` method receives a list of `ObjectInfoSimple` instances, which encapsulate information about the objects to be reduced .
+    In order to get a reader from an  `ObjectInfoSimple` instance, you can do something like this:
     ```java
-    public class ObjectInfoSimple {
-        private String bucket;
-        private String key;
-            ...
+    public String reduce(List<ObjectInfoSimple> batch) {
+
+        for (ObjectInfoSimple objectInfo : batch) {
+
+            BufferedReader objectBufferedReader = Commons.getReaderFromObjectInfo(objectInfo);
+
+            //do something with the reader then close it
+            objectBufferedReader.close();
         }
+    }
     ```
-    You can use the utility method `Commons.getReaderFromObjectInfo(ObjectInfoSimple info)` to open a reader of the object passed as a parameter.
-**For the reducer, you are responsible of closing the opened readers.**
+    **For the reducer, you are responsible of closing the opened readers.**
 
 ### 4-Configuration file
 Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details.
@@ -130,14 +134,14 @@ Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [in
 Below is the description of each attribute.
 
 | Attribute| Description|
-|:-------------:|:-------------:|
-|jobId|automatically set|
-|jobInputBucket|contains the dataset splits that each `Mapper` will process|
-|mapperOutputBucket|the bucket where the mappers will put their results|
-|reducerOutputBucket|the bucket where the reducers will put their results|
-|reducerMemory and mapperMemory|the amount of memory(and therefore other resources) allocated to the lambda functions. They are used internally by the library to compute the batch size that each mapper/reducer will process.|
-|mapperForceBatchSize and reducerForceBatchSize|used to force the library to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**|
-|disableReducer|if set to "true", disables the reducer|
+|:-------------:|-------------|
+|jobId|Automatically set|
+|jobInputBucket|Contains the dataset splits that each `Mapper` will process|
+|mapperOutputBucket|The bucket where the mappers will put their results|
+|reducerOutputBucket|The bucket where the reducers will put their results|
+|reducerMemory and mapperMemory|The amount of memory(and therefore other resources) allocated to the lambda functions. They are used internally by the library to compute the batch size that each mapper/reducer will process.|
+|mapperForceBatchSize and reducerForceBatchSize|Used to force the library to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**|
+|disableReducer|Tf set to "true", disables the reducer|
 
 ### 5-Project packaging
 In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#4-deployment) of the lambda, you need to [install maven](https://maven.apache.org/install.html).
@@ -195,7 +199,7 @@ You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/l
 Create the required lambdas with the following details:
 
 | Lambda Name   | Handler       |Memory|Function package|Runtime|
-|:-------------:|:-------------:|:----:|:----:|:----:|
+|:-------------:|-------------|----|----|----|
 | mappers_driver| fr.d2si.ooso.mappers_driver.MappersDriver | 1536 |example-project/target/job.jar|java8|
 | mappers_listener| fr.d2si.ooso.mappers_listener.MappersListener | 1536|example-project/target/job.jar|java8|
 | mapper     | fr.d2si.ooso.mapper_wrapper.MapperWrapper | same used in the [configuration file](#4-configuration-file)  |example-project/target/job.jar|java8|
@@ -213,10 +217,13 @@ You may attach the policies using the [console](http://docs.aws.amazon.com/lambd
    We provide a fully functional Terraform template that creates everything for you, except the input bucket. This template uses the job configuration file.
    Here is how to use it:
     - [install Terraform](https://www.terraform.io/intro/getting-started/install.html)
-    - Make sure your job configuration file is correct
-    - cd [terraform](./example-project/terraform)
-    - terraform plan
-    - terraform apply
+    - make sure your job configuration file is correct
+    - run the following commands
+        ```
+         cd terraform
+         terraform plan
+         terraform apply
+        ```
 
 For more info about Terraform, check [Terraform documentation](https://www.terraform.io/docs/) .
 
