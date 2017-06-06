@@ -74,7 +74,7 @@ public class CommonUtilitiesTest {
 
     @Test
     public void jobInfoContainsTrueData() throws Exception {
-        assertEquals(jobInfo.getJobId(), "95bf5dec-34b1-11e7-8072-34f39a0a3e44");
+        assertEquals(jobInfo.getJobId(), "f4a88b72-357d-11e7-9140-34f39a0a3e44");
         assertEquals(jobInfo.getMapperMemory(), 1536);
         assertEquals(jobInfo.getReducerMemory(), 1536);
         assertEquals(jobInfo.getJobInputBucket(), "my-dataset/500mb");
