@@ -134,7 +134,7 @@ Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [in
 Below is the description of each attribute.
 
 | Attribute| Description|
-|:-------------:|-------------|
+|-------------|-------------|
 |jobId|Automatically set|
 |jobInputBucket|Contains the dataset splits that each `Mapper` will process|
 |mapperOutputBucket|The bucket where the mappers will put their results|
@@ -199,7 +199,7 @@ You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/l
 Create the required lambdas with the following details:
 
 | Lambda Name   | Handler       |Memory|Function package|Runtime|
-|:-------------:|-------------|----|----|----|
+|-------------|-------------|----|----|----|
 | mappers_driver| fr.d2si.ooso.mappers_driver.MappersDriver | 1536 |example-project/target/job.jar|java8|
 | mappers_listener| fr.d2si.ooso.mappers_listener.MappersListener | 1536|example-project/target/job.jar|java8|
 | mapper     | fr.d2si.ooso.mapper_wrapper.MapperWrapper | same used in the [configuration file](#4-configuration-file)  |example-project/target/job.jar|java8|
