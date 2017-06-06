@@ -3,7 +3,7 @@
 </p>
 
 [![Build Status](https://travis-ci.org/d2si-oss/ooso.svg?branch=master)](https://travis-ci.org/d2si-oss/ooso)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/fr.d2-si/ooso/badge.svg)](https://search.maven.org/#artifactdetails%7Cfr.d2-si%7Cooso%7C0.0.1%7Cjar)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/fr.d2-si/ooso/badge.svg)](https://search.maven.org/#artifactdetails%7Cfr.d2-si%7Cooso%7C0.0.2%7Cjar)
 
 Ooso lets you run MapReduce jobs in a serverless way.
 It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/) .
@@ -83,7 +83,7 @@ Declare the library dependency in the `pom.xml` file
         <dependency>
             <groupId>fr.d2-si</groupId>
             <artifactId>ooso</artifactId>
-            <version>0.0.1</version>
+            <version>0.0.2</version>
         </dependency>
     ...
     </dependencies>
@@ -125,21 +125,25 @@ Implement your `Mapper` and `Reducer`.
 Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details.
 ```json
 {
-    "jobId": "",
-    "jobInputBucket": "input",
-    "mapperOutputBucket": "mapper-output",
-    "reducerOutputBucket": "reducer-output",
-    "reducerFunctionName": "reducer",
-    "mapperFunctionName": "mapper",
-    "reducerMemory": "1536",
-    "mapperMemory": "1536",
-    "mapperForceBatchSize": "-1",
-    "reducerForceBatchSize": "-1",
-    "disableReducer": "false"
+  "jobId": "",
+  "jobInputBucket": "input",
+  "mapperOutputBucket": "mapper-output",
+  "reducerOutputBucket": "reducer-output",
+  "mapperFunctionName": "mapper",
+  "mappersDriverFunctionName": "mappers_driver",
+  "mappersListenerFunctionName": "mappers_listener",
+  "reducerFunctionName": "reducer",
+  "reducersDriverFunctionName": "reducers_driver",
+  "reducersListenerFunctionName": "reducers_listener",
+  "mapperForceBatchSize": "-1",
+  "reducerForceBatchSize": "-1",
+  "mapperMemory": "1536",
+  "reducerMemory": "1536",
+  "disableReducer": "false"
 }
 ```
 
-Below is the description of each attribute.
+Below is the description of some attributes (the rest is self explanatory).
 
 | Attribute| Description|
 |-------------|-------------|

@@ -57,7 +57,7 @@ resource "aws_iam_policy_attachment" "s3AccessAttachment" {
 
 resource "aws_lambda_function" "mappers_driver" {
   filename = "../target/job.jar"
-  function_name = "mappers_driver"
+  function_name = "${data.external.jobInfo.result.mappersDriverFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
   handler = "fr.d2si.ooso.mappers_driver.MappersDriver"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
@@ -68,7 +68,7 @@ resource "aws_lambda_function" "mappers_driver" {
 
 resource "aws_lambda_function" "reducers_driver" {
   filename = "../target/job.jar"
-  function_name = "reducers_driver"
+  function_name = "${data.external.jobInfo.result.reducersDriverFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
   handler = "fr.d2si.ooso.reducers_driver.ReducersDriver"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
@@ -101,7 +101,7 @@ resource "aws_lambda_function" "reducer" {
 
 resource "aws_lambda_function" "mappersListener" {
   filename = "../target/job.jar"
-  function_name = "mappers_listener"
+  function_name = "${data.external.jobInfo.result.mappersListenerFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
   handler = "fr.d2si.ooso.mappers_listener.MappersListener"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
@@ -112,7 +112,7 @@ resource "aws_lambda_function" "mappersListener" {
 
 resource "aws_lambda_function" "reducersListener" {
   filename = "../target/job.jar"
-  function_name = "reducers_listener"
+  function_name = "${data.external.jobInfo.result.reducersListenerFunctionName}"
   role = "${aws_iam_role.iamForLambda.arn}"
   handler = "fr.d2si.ooso.reducers_listener.ReducersListener"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"

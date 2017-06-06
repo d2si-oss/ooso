@@ -11,13 +11,14 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
     private static final int HEARTBEAT_INTERVAL = 200;
 
     private ReducersListenerInfo reducersListenerInfo;
+    private JobInfo jobInfo;
 
     @Override
     public String handleRequest(ReducersListenerInfo reducersListenerInfo, Context context) {
         try {
             this.reducersListenerInfo = reducersListenerInfo;
 
-            JobInfo jobInfo = JobInfoProvider.getJobInfo();
+            this.jobInfo = JobInfoProvider.getJobInfo();
 
             //if there is only one file to return, we know that it's the final reducer, there is no need to listen for results
             if (reducersListenerInfo.getExpectedFilesCount() != 1) {
@@ -41,11 +42,11 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
     }
 
     private void invokeReducersListener() {
-        Commons.invokeLambdaAsync("reducers_listener", this.reducersListenerInfo);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), this.reducersListenerInfo);
     }
 
     private void invokeNextReducerCoordinator() {
         ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(this.reducersListenerInfo.getStep() + 1);
-        Commons.invokeLambdaAsync("reducers_driver", reducersDriverInfo);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersDriverFunctionName(), reducersDriverInfo);
     }
 }

@@ -10,10 +10,13 @@ import fr.d2si.ooso.utils.JobInfoProvider;
 public class MappersListener implements RequestHandler<Void, String> {
     private static final int HEARTBEAT_INTERVAL = 500;
 
+    private JobInfo jobInfo;
+
+
     @Override
     public String handleRequest(Void aVoid, Context context) {
         try {
-            JobInfo jobInfo = JobInfoProvider.getJobInfo();
+            this.jobInfo = JobInfoProvider.getJobInfo();
 
             int currentMappersOutputFiles =
                     !jobInfo.getDisableReducer() ? Commons.getBucketObjectSummaries(jobInfo.getMapperOutputBucket(), jobInfo.getJobId()).size() :
@@ -36,12 +39,12 @@ public class MappersListener implements RequestHandler<Void, String> {
     }
 
     private void invokeMappersListener() {
-        Commons.invokeLambdaAsync("mappers_listener", null);
+        Commons.invokeLambdaAsync(this.jobInfo.getMappersListenerFunctionName(), null);
     }
 
     private void invokeReducerCoordinator() {
         ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(0);
-        Commons.invokeLambdaAsync("reducers_driver", reducersDriverInfo);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersDriverFunctionName(), reducersDriverInfo);
     }
 
 }
