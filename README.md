@@ -6,7 +6,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/fr.d2-si/ooso/badge.svg)](https://search.maven.org/#artifactdetails%7Cfr.d2-si%7Cooso%7C0.0.2%7Cjar)
 
 Ooso lets you run MapReduce jobs in a serverless way.
-It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/) .
+It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/).
 
 ## Table of contents
 
@@ -105,7 +105,7 @@ Implement your `Mapper` and `Reducer`.
         public abstract String reduce(List<ObjectInfoSimple> batch);
     }
     ```
-    The `reduce` method receives a list of `ObjectInfoSimple` instances, which encapsulate information about the objects to be reduced .
+    The `reduce` method receives a list of `ObjectInfoSimple` instances, which encapsulate information about the objects to be reduced.
     In order to get a reader from an  `ObjectInfoSimple` instance, you can do something like this:
     ```java
     public String reduce(List<ObjectInfoSimple> batch) {
@@ -176,7 +176,7 @@ You need three buckets:
 
 You must use the same bucket names used in the [configuration](#4-configuration-file) step above.
 
-You may create the buckets using the [console](http://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-bucket.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html) or our [Terraform template](./example-project/terraform/lambda.tf) .
+You may create the buckets using the [console](http://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-bucket.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html) or our [Terraform template](./example-project/terraform/lambda.tf).
 
 ### 2. IAM Roles and policies
 
@@ -197,7 +197,7 @@ a. Create an IAM role with the following trust policy
 }
 ```
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You may create the IAM role using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console), the [command line](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-cli) or our [Terraform template](./example-project/terraform/lambda.tf) .
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You may create the IAM role using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console), the [command line](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-cli) or our [Terraform template](./example-project/terraform/lambda.tf).
 
 b. Attach the following policies to your role
 
@@ -206,7 +206,7 @@ b. Attach the following policies to your role
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Note that these policies are too broad. You may use more fine-grained policies/roles for each lambda.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html) or our [Terraform template](./example-project/terraform/lambda.tf) .
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html) or our [Terraform template](./example-project/terraform/lambda.tf).
 
 ### 3. Lambda functions
 Create the required lambdas with the following details:
@@ -222,7 +222,7 @@ Create the required lambdas with the following details:
 
 We assume that the project jar is located at `example-project/target/job.jar`.
 
-You may attach the policies using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./example-project/terraform/lambda.tf) .
+You may attach the policies using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./example-project/terraform/lambda.tf).
 
 ### 4. Deployment
 a. The easy way
@@ -239,12 +239,12 @@ a. The easy way
      terraform apply
     ```
 
-For more info about Terraform, check [Terraform documentation](https://www.terraform.io/docs/) .
+For more info about Terraform, check [Terraform documentation](https://www.terraform.io/docs/).
 
 b. The less easy way
 
 You may use any deployment method you are familiar with. The AWS console, the AWS cli, python scripts, ...
-However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](aws.amazon.com/cloudformation‎) .
+However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](aws.amazon.com/cloudformation‎).
 ___
 
 ## IV. Running the job
