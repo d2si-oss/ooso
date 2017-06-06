@@ -73,7 +73,7 @@ public class MappersDriver implements RequestHandler<Void, String> {
     }
 
     private void invokeMappersListener() {
-        Commons.invokeLambdaAsync("mappers_listener", null);
+        Commons.invokeLambdaAsync(this.jobInfo.getMappersListenerFunctionName(), null);
     }
 
     private void invokeMappers(List<List<ObjectInfoSimple>> batches) throws InterruptedException {

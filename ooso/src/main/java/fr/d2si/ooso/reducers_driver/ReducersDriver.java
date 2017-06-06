@@ -77,7 +77,7 @@ public class ReducersDriver implements RequestHandler<ReducersDriverInfo, String
 
     private void invokeReducersListener(int step, int batchSize) {
         ReducersListenerInfo reducersListenerInfo = new ReducersListenerInfo(step, batchSize);
-        Commons.invokeLambdaAsync("reducers_listener", reducersListenerInfo);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), reducersListenerInfo);
     }
 
 }
