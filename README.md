@@ -22,7 +22,7 @@ It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) a
     * [2. IAM Roles and policies](#2-iam-roles-and-policies)
     * [3. Lambda functions](#3-lambda-functions)
     * [4. Deployment](#4-deployment)
-  * [IV. Running the job](#i-vrunning-the-job)
+  * [IV. Running the job](#iv-running-the-job)
 
 ___
 
