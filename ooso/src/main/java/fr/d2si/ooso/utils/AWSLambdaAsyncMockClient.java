@@ -65,12 +65,14 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         lambdaHandlerMapping = new HashMap<>(6);
         threadPool = new ErrorDetectingThreadPool();
 
-        lambdaHandlerMapping.put("mappers_driver", "fr.d2si.ooso.mappers_driver.MappersDriver");
-        lambdaHandlerMapping.put("reducers_driver", "fr.d2si.ooso.reducers_driver.ReducersDriver");
-        lambdaHandlerMapping.put("mapper", "fr.d2si.ooso.mapper_wrapper.MapperWrapper");
-        lambdaHandlerMapping.put("reducer", "fr.d2si.ooso.reducer_wrapper.ReducerWrapper");
-        lambdaHandlerMapping.put("reducers_listener", "fr.d2si.ooso.reducers_listener.ReducersListener");
-        lambdaHandlerMapping.put("mappers_listener", "fr.d2si.ooso.mappers_listener.MappersListener");
+        JobInfo jobInfo = JobInfoProvider.getJobInfo();
+
+        lambdaHandlerMapping.put(jobInfo.getMappersDriverFunctionName(), "fr.d2si.ooso.mappers_driver.MappersDriver");
+        lambdaHandlerMapping.put(jobInfo.getReducersDriverFunctionName(), "fr.d2si.ooso.reducers_driver.ReducersDriver");
+        lambdaHandlerMapping.put(jobInfo.getMapperFunctionName(), "fr.d2si.ooso.mapper_wrapper.MapperWrapper");
+        lambdaHandlerMapping.put(jobInfo.getReducerFunctionName(), "fr.d2si.ooso.reducer_wrapper.ReducerWrapper");
+        lambdaHandlerMapping.put(jobInfo.getMappersListenerFunctionName(), "fr.d2si.ooso.mappers_listener.MappersListener");
+        lambdaHandlerMapping.put(jobInfo.getReducersListenerFunctionName(), "fr.d2si.ooso.reducers_listener.ReducersListener");
     }
 
     @Override
