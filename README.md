@@ -10,19 +10,19 @@ It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) a
 
 ## Table of contents
 
-  * [I.Architecture and workflow](#i-architecture-and-workflow)
-  * [II.How to use the library](#iihow-to-use-the-library)
-    * [1.Project structure](#1project-structure)
-    * [2.Library dependency](#2library-dependency)
-    * [3.Classes to implement](#3classes-to-implement)
-    * [4.Configuration file](#4configuration-file)
-    * [5.Project packaging](#5project-packaging)
-  * [III.AWS Infrastructure](#iiiaws-infrastructure)
-    * [1.S3 Buckets](#1s3-buckets)
-    * [2.IAM Roles and policies](#2iam-roles-and-policies)
-    * [3.Lambda functions](#3lambda-functions)
-    * [4.Deployment](#4deployment)
-  * [IV.Running the job](#ivrunning-the-job)
+  * [I. Architecture and workflow](#i-architecture-and-workflow)
+  * [II. How to use the library](#ii-how-to-use-the-library)
+    * [1. Project structure](#1-project-structure)
+    * [2. Library dependency](#2-library-dependency)
+    * [3. Classes to implement](#3-classes-to-implement)
+    * [4. Configuration file](#4-configuration-file)
+    * [5. Project packaging](#5-project-packaging)
+  * [III. AWS Infrastructure](#iii-aws-infrastructure)
+    * [1. S3 Buckets](#1-s3-buckets)
+    * [2. IAM Roles and policies](#2-iam-roles-and-policies)
+    * [3. Lambda functions](#3-lambda-functions)
+    * [4. Deployment](#4-deployment)
+  * [IV. Running the job](#i-vrunning-the-job)
 
 ___
 
@@ -53,8 +53,8 @@ The library workflow is as follows:
 
 ___
 
-## II.How to use the library
-### 1.Project Structure
+## II. How to use the library
+### 1. Project Structure
 The easiest way is to clone the repository and use the provided [example-project](example-project) directory which has the following structure:
 
 ```
@@ -74,7 +74,7 @@ The easiest way is to clone the repository and use the provided [example-project
             └── jobInfo.json
 ```
 
-### 2.Library dependency
+### 2. Library dependency
 Declare the library dependency in the `pom.xml` file
 
 ```xml
@@ -89,7 +89,7 @@ Declare the library dependency in the `pom.xml` file
     </dependencies>
 ```
 
-### 3.Classes to implement
+### 3. Classes to implement
 Implement your `Mapper` and `Reducer`.
 - The class [Mapper](example-project/src/main/java/mapper/Mapper.java) is the implementation of your mappers. It must extend the `fr.d2si.ooso.mapper.MapperAbstract` class which looks like the following:
     ```java
@@ -121,7 +121,7 @@ Implement your `Mapper` and `Reducer`.
     ```
     **For the reducer, you are responsible of closing the opened readers.**
 
-### 4.Configuration file
+### 4. Configuration file
 Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details.
 ```json
 {
@@ -151,7 +151,7 @@ Below is the description of each attribute.
 |mapperForceBatchSize and reducerForceBatchSize|Used to force the library to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**|
 |disableReducer|Tf set to "true", disables the reducer|
 
-### 5.Project packaging
+### 5. Project packaging
 In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#4-deployment) of the lambda, you need to [install maven](https://maven.apache.org/install.html).
 
 Then, run `package.sh` script to generate the jobId and create the project jar:
@@ -160,9 +160,9 @@ Then, run `package.sh` script to generate the jobId and create the project jar:
 ```
 ___
 
-## III.AWS Infrastructure
+## III. AWS Infrastructure
 Before diving into the infrastructure details, please have a look at the [deployment](#4-deployment) section.
-### 1.S3 Buckets
+### 1. S3 Buckets
 Our lambda functions use S3 Buckets to fetch needed files and put the result of their processing.
 
 You need three buckets:
@@ -174,7 +174,7 @@ You must use the same bucket names used in the [configuration](#4-configuration-
 
 You may create the buckets using the [console](http://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-bucket.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html) or our [Terraform template](./example-project/terraform/lambda.tf) .
 
-### 2.IAM Roles and policies
+### 2. IAM Roles and policies
 
 a. Create an IAM role with the following trust policy
 
@@ -204,7 +204,7 @@ b. Attach the following policies to your role
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html) or our [Terraform template](./example-project/terraform/lambda.tf) .
 
-### 3.Lambda functions
+### 3. Lambda functions
 Create the required lambdas with the following details:
 
 | Lambda Name   | Handler       |Memory|Function package|Runtime|
@@ -220,7 +220,7 @@ We assume that the project jar is located at `example-project/target/job.jar`.
 
 You may attach the policies using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./example-project/terraform/lambda.tf) .
 
-### 4.Deployment
+### 4. Deployment
 a. The easy way
 
    We provide a fully functional Terraform template that creates everything for you, except the input bucket. This template uses the job configuration file.
@@ -243,7 +243,7 @@ You may use any deployment method you are familiar with. The AWS console, the AW
 However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](aws.amazon.com/cloudformation‎) .
 ___
 
-## IV.Running the job
+## IV. Running the job
 All you need is to run the `mappers_driver` function
  ```
 aws lambda invoke --function-name mappers_driver --invocation-type Event /dev/null
