@@ -41,12 +41,12 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
         return null;
     }
 
-    private void invokeReducersListener() {
-        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), this.reducersListenerInfo);
-    }
-
     private void invokeNextReducerCoordinator() {
         ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(this.reducersListenerInfo.getStep() + 1);
         Commons.invokeLambdaAsync(this.jobInfo.getReducersDriverFunctionName(), reducersDriverInfo);
+    }
+
+    private void invokeReducersListener() {
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), this.reducersListenerInfo);
     }
 }
