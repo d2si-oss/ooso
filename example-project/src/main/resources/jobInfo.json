@@ -1,0 +1,17 @@
+{
+  "reducerMemory": "1536",
+  "disableReducer": "false",
+  "mapperMemory": "1536",
+  "mapperFunctionName": "mapper",
+  "mappersDriverFunctionName": "mappers_driver",
+  "mappersListenerFunctionName": "mappers_listener",
+  "reducerForceBatchSize": "-1",
+  "reducerOutputBucket": "reducers-bucket",
+  "mapperOutputBucket": "mappers-bucket",
+  "reducerFunctionName": "reducer",
+  "reducersDriverFunctionName": "reducers_driver",
+  "reducersListenerFunctionName": "reducers_listener",
+  "jobId": "f4a88b72-357d-11e7-9140-34f39a0a3e44",
+  "jobInputBucket": "test-data/250mb",
+  "mapperForceBatchSize": "-1"
+}
