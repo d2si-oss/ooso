@@ -57,15 +57,6 @@ public class Commons {
         return prefix;
     }
 
-    public static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {
-        int maxUsableMemory = (int) (0.6 * 1024 * 1024 * availableMemory);
-        long totalSize = 0;
-        for (S3ObjectSummary summary : objectSummaries)
-            totalSize += summary.getSize();
-        double averageSize = totalSize / objectSummaries.size();
-        return (int) (maxUsableMemory / averageSize);
-    }
-
     public static void storeObject(String contentType,
                                    String content,
                                    String destBucket,
@@ -93,6 +84,10 @@ public class Commons {
         s3Client.putObject(new PutObjectRequest(destBucket, destKey, content).withMetadata(metadata));
     }
 
+    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory) {
+        return getBatches(bucket, memory, "", -1);
+    }
+
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
         List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
         int batchSize = desiredBatchSize <= 0 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
@@ -118,8 +113,13 @@ public class Commons {
         return batches;
     }
 
-    public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory) {
-        return getBatches(bucket, memory, "", -1);
+    public static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {
+        int maxUsableMemory = (int) (0.6 * 1024 * 1024 * availableMemory);
+        long totalSize = 0;
+        for (S3ObjectSummary summary : objectSummaries)
+            totalSize += summary.getSize();
+        double averageSize = totalSize / objectSummaries.size();
+        return (int) (maxUsableMemory / averageSize);
     }
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix) {
@@ -128,6 +128,23 @@ public class Commons {
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, int desiredBatchSize) {
         return getBatches(bucket, memory, "", desiredBatchSize);
+    }
+
+    public static void emptyBucket(String bucket) {
+        emptyBucketWithPrefix(bucket, "");
+    }
+
+    public static void emptyBucketWithPrefix(String bucket, String prefix) {
+        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
+
+        List<S3ObjectSummary> files = Commons.getBucketObjectSummaries(bucket, prefix);
+
+        for (S3ObjectSummary object : files)
+            s3Client.deleteObject(object.getBucketName(), object.getKey());
+    }
+
+    public static void invokeLambdaAsync(String function) {
+        invokeLambda(function, null, true);
     }
 
     public static void invokeLambda(String function, Object payload, boolean async) {
@@ -140,19 +157,6 @@ public class Commons {
                 .withPayload(payloadString);
 
         lambda.invoke(request);
-    }
-
-    public static void emptyBucketWithPrefix(String bucket, String prefix) {
-        AmazonS3 s3Client = AmazonS3Provider.getS3Client();
-
-        List<S3ObjectSummary> files = Commons.getBucketObjectSummaries(bucket, prefix);
-
-        for (S3ObjectSummary object : files)
-            s3Client.deleteObject(object.getBucketName(), object.getKey());
-    }
-
-    public static void emptyBucket(String bucket) {
-        emptyBucketWithPrefix(bucket, "");
     }
 
     public static void invokeLambdaAsync(String function, Object payload) {
