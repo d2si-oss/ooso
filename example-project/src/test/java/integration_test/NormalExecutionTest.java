@@ -34,16 +34,6 @@ public class NormalExecutionTest {
 
     }
 
-    @Test
-    public void normalExec() throws Exception {
-        lambdaClient.invoke(new InvokeRequest()
-                .withPayload("")
-                .withInvocationType(InvocationType.Event)
-                .withFunctionName("mappers_driver"));
-
-        lambdaClient.awaitWorkflowEnd();
-    }
-
     @AfterClass
     public static void tearDown() throws Exception {
         File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/test-data/250mb");
@@ -58,5 +48,15 @@ public class NormalExecutionTest {
         s3Client.deleteBucket(jobInfo.getMapperOutputBucket());
         s3Client.deleteBucket(jobInfo.getReducerOutputBucket());
 
+    }
+
+    @Test
+    public void normalExec() throws Exception {
+        lambdaClient.invoke(new InvokeRequest()
+                .withPayload("")
+                .withInvocationType(InvocationType.Event)
+                .withFunctionName(jobInfo.getMappersDriverFunctionName()));
+
+        lambdaClient.awaitWorkflowEnd();
     }
 }
