@@ -17,8 +17,10 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class AWSLambdaAsyncMockClient implements AWSLambda {
+    private final static Gson GSON = new GsonBuilder().serializeNulls().setLenient().create();
     private Map<String, String> lambdaHandlerMapping;
     private ErrorDetectingThreadPool threadPool;
+
 
     public AWSLambdaAsyncMockClient() {
         lambdaHandlerMapping = new HashMap<>(6);
@@ -61,13 +63,11 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
     }
 
     private void invokeLambda(Class<?> functionClass, ByteBuffer payload) throws IllegalAccessException, InstantiationException, InvocationTargetException, ExecutionException, InterruptedException {
-        Gson gson = new GsonBuilder().serializeNulls().setLenient().create();
         Class<?> lambdaPayloadClass = getLambdaPayloadClass(functionClass);
-        Object lambdaPayload = gson.fromJson(new String(payload.array()), lambdaPayloadClass);
+        Object lambdaPayload = getPayloadObjectFromJson(payload, lambdaPayloadClass);
 
         RequestHandler functionClassInstance = ((RequestHandler) functionClass.newInstance());
         threadPool.submit(() -> functionClassInstance.handleRequest(lambdaPayload, new MockContext()));
-
     }
 
     private Class<?> getLambdaPayloadClass(Class<?> functionClass) {
@@ -79,6 +79,10 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
             }
         }
         return payloadClass;
+    }
+
+    private Object getPayloadObjectFromJson(ByteBuffer payload, Class<?> lambdaPayloadClass) {
+        return GSON.fromJson(new String(payload.array()), lambdaPayloadClass);
     }
 
     public void awaitWorkflowEnd() throws Exception {

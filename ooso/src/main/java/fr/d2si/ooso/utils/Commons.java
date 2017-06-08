@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -16,6 +17,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 public class Commons {
     public final static String JSON_TYPE = "application/json";
@@ -40,7 +43,7 @@ public class Commons {
             summaries.addAll(objectListing.getObjectSummaries());
         }
 
-        return summaries.stream().filter((obj) -> !obj.getKey().equals("") && !obj.getKey().endsWith("/")).collect(Collectors.toList());
+        return summaries.stream().filter((obj) -> !obj.getKey().equals("") && !obj.getKey().endsWith("/")).collect(toList());
     }
 
     public static String getBucketFromFullPath(String path) {
@@ -90,27 +93,13 @@ public class Commons {
 
     public static List<List<ObjectInfoSimple>> getBatches(String bucket, int memory, String prefix, int desiredBatchSize) {
         List<S3ObjectSummary> objectSummaries = Commons.getBucketObjectSummaries(bucket, prefix);
-        int batchSize = desiredBatchSize <= 0 ? Commons.getBatchSize(objectSummaries, memory) : desiredBatchSize;
-
-        List<List<ObjectInfoSimple>> batches = new ArrayList<>(objectSummaries.size() / batchSize);
-        List<ObjectInfoSimple> batch = new ArrayList<>(batchSize);
-        int currentBatchSize = 0;
-        for (S3ObjectSummary summary : objectSummaries) {
-            if (currentBatchSize == batchSize) {
-                batches.add(batch);
-                batch = new ArrayList<>(batchSize);
-                currentBatchSize = 0;
-            }
-
-            ObjectInfoSimple bucketAndKey = new ObjectInfoSimple(summary);
-
-            batch.add(bucketAndKey);
-            currentBatchSize++;
-        }
-        if (currentBatchSize != 0)
-            batches.add(batch);
-
-        return batches;
+        int batchSize;
+        if (desiredBatchSize <= 0)
+            batchSize = Commons.getBatchSize(objectSummaries, memory);
+        else
+            batchSize = desiredBatchSize;
+        List<ObjectInfoSimple> unPartitionedList = objectSummaries.stream().map(ObjectInfoSimple::new).collect(toList());
+        return Lists.partition(unPartitionedList, batchSize);
     }
 
     public static int getBatchSize(List<S3ObjectSummary> objectSummaries, int availableMemory) {

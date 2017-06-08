@@ -23,9 +23,7 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
             //if there is only one file to return, we know that it's the final reducer, there is no need to listen for results
             if (reducersListenerInfo.getExpectedFilesCount() != 1) {
 
-                int currentReducersOutputFiles = Commons.getBucketObjectSummaries(
-                        jobInfo.getReducerOutputBucket(),
-                        jobInfo.getJobId() + "/" + reducersListenerInfo.getStep() + "-").size();
+                int currentReducersOutputFiles = getCurrentReducerOutputCount(reducersListenerInfo);
 
                 if (currentReducersOutputFiles == reducersListenerInfo.getExpectedFilesCount())
                     invokeNextReducerCoordinator();
@@ -39,6 +37,12 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
             throw new RuntimeException(e);
         }
         return null;
+    }
+
+    private int getCurrentReducerOutputCount(ReducersListenerInfo reducersListenerInfo) {
+        return Commons.getBucketObjectSummaries(
+                jobInfo.getReducerOutputBucket(),
+                jobInfo.getJobId() + "/" + reducersListenerInfo.getStep() + "-").size();
     }
 
     private void invokeNextReducerCoordinator() {
