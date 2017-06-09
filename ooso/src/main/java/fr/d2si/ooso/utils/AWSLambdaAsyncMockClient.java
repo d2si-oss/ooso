@@ -63,8 +63,8 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         return getClass().getClassLoader().loadClass(functionClassName);
     }
 
-    private void invokeLambda(Class<?> functionClass, ByteBuffer payload) throws IllegalAccessException, InstantiationException, InvocationTargetException, ExecutionException, InterruptedException {
-        Class<?> lambdaPayloadClass = getLambdaPayloadClass(functionClass);
+    private void invokeLambda(Class functionClass, ByteBuffer payload) throws IllegalAccessException, InstantiationException, InvocationTargetException, ExecutionException, InterruptedException {
+        Class lambdaPayloadClass = getLambdaPayloadClass(functionClass);
         Object lambdaPayload = getPayloadObjectFromJson(payload, lambdaPayloadClass);
 
         RequestHandler functionClassInstance = ((RequestHandler) functionClass.newInstance());
@@ -82,7 +82,7 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         return payloadClass;
     }
 
-    private Object getPayloadObjectFromJson(ByteBuffer payload, Class<?> lambdaPayloadClass) {
+    private Object getPayloadObjectFromJson(ByteBuffer payload, Class lambdaPayloadClass) {
         return GSON.fromJson(new String(payload.array()), lambdaPayloadClass);
     }
 
