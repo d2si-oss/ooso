@@ -17,10 +17,49 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class AWSLambdaAsyncMockClient implements AWSLambda {
-    private final static Gson GSON = new GsonBuilder().serializeNulls().setLenient().create();
     private Map<String, String> lambdaHandlerMapping;
     private ErrorDetectingThreadPool threadPool;
 
+    private class ErrorDetectingThreadPool extends ThreadPoolExecutor {
+
+        private boolean exceptionOccured = false;
+        private Exception exception;
+
+        ErrorDetectingThreadPool() {
+            super(0, Integer.MAX_VALUE,
+                    60L, TimeUnit.SECONDS,
+                    new SynchronousQueue<>());
+        }
+
+        @Override
+        protected void afterExecute(Runnable r, Throwable t) {
+            super.afterExecute(r, t);
+            if (t == null && r instanceof Future<?>) {
+                try {
+                    ((Future<?>) r).get();
+                } catch (CancellationException ce) {
+                    t = ce;
+                } catch (ExecutionException ee) {
+                    t = ee.getCause();
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt(); // ignore/reset
+                }
+            }
+            if (t != null) {
+                this.exceptionOccured = true;
+                this.exception = (Exception) t;
+                this.shutdownNow();
+            }
+        }
+
+        boolean isExceptionOccured() {
+            return exceptionOccured;
+        }
+
+        Exception getException() {
+            return exception;
+        }
+    }
 
     public AWSLambdaAsyncMockClient() {
         lambdaHandlerMapping = new HashMap<>(6);
@@ -62,14 +101,6 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         return getClass().getClassLoader().loadClass(functionClassName);
     }
 
-    private void invokeLambda(Class<?> functionClass, ByteBuffer payload) throws IllegalAccessException, InstantiationException, InvocationTargetException, ExecutionException, InterruptedException {
-        Class<?> lambdaPayloadClass = getLambdaPayloadClass(functionClass);
-        Object lambdaPayload = getPayloadObjectFromJson(payload, lambdaPayloadClass);
-
-        RequestHandler functionClassInstance = ((RequestHandler) functionClass.newInstance());
-        threadPool.submit(() -> functionClassInstance.handleRequest(lambdaPayload, new MockContext()));
-    }
-
     private Class<?> getLambdaPayloadClass(Class<?> functionClass) {
         Class<?> payloadClass = null;
 
@@ -81,8 +112,14 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         return payloadClass;
     }
 
-    private Object getPayloadObjectFromJson(ByteBuffer payload, Class<?> lambdaPayloadClass) {
-        return GSON.fromJson(new String(payload.array()), lambdaPayloadClass);
+    private void invokeLambda(Class<?> functionClass, ByteBuffer payload) throws IllegalAccessException, InstantiationException, InvocationTargetException, ExecutionException, InterruptedException {
+        Gson gson = new GsonBuilder().serializeNulls().setLenient().create();
+        Class<?> lambdaPayloadClass = getLambdaPayloadClass(functionClass);
+        Object lambdaPayload = gson.fromJson(new String(payload.array()), lambdaPayloadClass);
+
+        RequestHandler functionClassInstance = ((RequestHandler) functionClass.newInstance());
+        threadPool.submit(() -> functionClassInstance.handleRequest(lambdaPayload, new MockContext()));
+
     }
 
     public void awaitWorkflowEnd() throws Exception {
@@ -244,47 +281,6 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
     @Override
     public ResponseMetadata getCachedResponseMetadata(AmazonWebServiceRequest amazonWebServiceRequest) {
         return null;
-    }
-
-    private class ErrorDetectingThreadPool extends ThreadPoolExecutor {
-
-        private boolean exceptionOccured = false;
-        private Exception exception;
-
-        ErrorDetectingThreadPool() {
-            super(0, Integer.MAX_VALUE,
-                    60L, TimeUnit.SECONDS,
-                    new SynchronousQueue<>());
-        }
-
-        @Override
-        protected void afterExecute(Runnable r, Throwable t) {
-            super.afterExecute(r, t);
-            if (t == null && r instanceof Future<?>) {
-                try {
-                    ((Future<?>) r).get();
-                } catch (CancellationException ce) {
-                    t = ce;
-                } catch (ExecutionException ee) {
-                    t = ee.getCause();
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt(); // ignore/reset
-                }
-            }
-            if (t != null) {
-                this.exceptionOccured = true;
-                this.exception = (Exception) t;
-                this.shutdownNow();
-            }
-        }
-
-        boolean isExceptionOccured() {
-            return exceptionOccured;
-        }
-
-        Exception getException() {
-            return exception;
-        }
     }
 
 

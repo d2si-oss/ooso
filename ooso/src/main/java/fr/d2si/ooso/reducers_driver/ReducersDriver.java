@@ -39,36 +39,27 @@ public class ReducersDriver implements RequestHandler<ReducersDriverInfo, String
 
         String inputPrefix = getInputPrefix(reduceStep);
         String inputBucket = whichInputBucket(reduceStep);
-        List<List<ObjectInfoSimple>> batches = getBatches(inputPrefix, inputBucket);
+        List<List<ObjectInfoSimple>> batches = Commons
+                .getBatches(
+                        inputBucket,
+                        this.jobInfo.getReducerMemory(),
+                        inputPrefix,
+                        this.jobInfo.getReducerForceBatchSize());
 
         invokeReducersListener(reduceStep, batches.size());
         invokeReducers(reduceStep, batches);
     }
 
     private String getInputPrefix(int reduceStep) {
-        if (reduceStep == 0)
-            return this.jobId + "/";
-        return this.jobId + "/" + (reduceStep - 1) + "-";
+        return reduceStep == 0 ?
+                this.jobId + "/" :
+                this.jobId + "/" + (reduceStep - 1) + "-";
     }
 
     private String whichInputBucket(int reduceStep) {
-        if (reduceStep == 0)
-            return this.jobInfo.getMapperOutputBucket();
-        return this.jobInfo.getReducerOutputBucket();
-    }
-
-    private List<List<ObjectInfoSimple>> getBatches(String inputPrefix, String inputBucket) {
-        return Commons
-                .getBatches(
-                        inputBucket,
-                        this.jobInfo.getReducerMemory(),
-                        inputPrefix,
-                        this.jobInfo.getReducerForceBatchSize());
-    }
-
-    private void invokeReducersListener(int step, int batchSize) {
-        ReducersListenerInfo reducersListenerInfo = new ReducersListenerInfo(step, batchSize);
-        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), reducersListenerInfo);
+        return reduceStep == 0 ?
+                this.jobInfo.getMapperOutputBucket() :
+                this.jobInfo.getReducerOutputBucket();
     }
 
     private void invokeReducers(int reduceStep, List<List<ObjectInfoSimple>> batches) throws InterruptedException, UnsupportedEncodingException {
@@ -83,4 +74,10 @@ public class ReducersDriver implements RequestHandler<ReducersDriverInfo, String
             Commons.invokeLambdaAsync(this.jobInfo.getReducerFunctionName(), reducerWrapperInfo);
         }
     }
+
+    private void invokeReducersListener(int step, int batchSize) {
+        ReducersListenerInfo reducersListenerInfo = new ReducersListenerInfo(step, batchSize);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), reducersListenerInfo);
+    }
+
 }
