@@ -64,6 +64,11 @@ resource "aws_lambda_function" "mappers_driver" {
   runtime = "java8"
   memory_size = "1536"
   timeout = "300"
+  environment {
+    variables {
+      SMR_STAGE="PROD"
+    }
+  }
 }
 
 resource "aws_lambda_function" "reducers_driver" {
@@ -75,6 +80,11 @@ resource "aws_lambda_function" "reducers_driver" {
   runtime = "java8"
   memory_size = "1536"
   timeout = "300"
+  environment {
+    variables {
+      SMR_STAGE="PROD"
+    }
+  }
 }
 
 resource "aws_lambda_function" "mapper" {
@@ -86,6 +96,11 @@ resource "aws_lambda_function" "mapper" {
   runtime = "java8"
   memory_size = "${data.external.jobInfo.result.mapperMemory}"
   timeout = "300"
+  environment {
+    variables {
+      SMR_STAGE="PROD"
+    }
+  }
 }
 
 resource "aws_lambda_function" "reducer" {
@@ -97,6 +112,11 @@ resource "aws_lambda_function" "reducer" {
   runtime = "java8"
   memory_size = "${data.external.jobInfo.result.reducerMemory}"
   timeout = "300"
+  environment {
+    variables {
+      SMR_STAGE="PROD"
+    }
+  }
 }
 
 resource "aws_lambda_function" "mappersListener" {
@@ -108,6 +128,11 @@ resource "aws_lambda_function" "mappersListener" {
   runtime = "java8"
   memory_size = "1536"
   timeout = "300"
+  environment {
+    variables {
+      SMR_STAGE="PROD"
+    }
+  }
 }
 
 resource "aws_lambda_function" "reducersListener" {
@@ -119,4 +144,9 @@ resource "aws_lambda_function" "reducersListener" {
   runtime = "java8"
   memory_size = "1536"
   timeout = "300"
+  environment {
+    variables {
+      SMR_STAGE="PROD"
+    }
+  }
 }

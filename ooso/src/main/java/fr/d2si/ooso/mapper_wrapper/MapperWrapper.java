@@ -3,14 +3,11 @@ package fr.d2si.ooso.mapper_wrapper;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import fr.d2si.ooso.mapper.MapperAbstract;
 import fr.d2si.ooso.utils.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.List;
 
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
@@ -34,7 +31,6 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
 
             this.mapperLogic = instantiateMapperClass();
 
-
             List<ObjectInfoSimple> batch = mapperWrapperInfo.getBatch();
 
             processBatch(batch);
@@ -56,9 +52,18 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         }
     }
 
+    private String processKey(ObjectInfoSimple objectInfoSimple) throws IOException {
+        BufferedReader reader = Commons.getReaderFromObjectInfo(objectInfoSimple);
+
+        String result = this.mapperLogic.map(reader);
+
+        reader.close();
+
+        return result;
+    }
 
     private void storeResult(String result, String key) throws IOException {
-        String realKey = key.substring(key.lastIndexOf("/") + 1, key.length());
+        String realKey = getRealKey(key);
 
         String destBucket = getDestBucket();
 
@@ -68,22 +73,13 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
                 this.jobId + "/" + realKey);
     }
 
+    private String getRealKey(String key) {
+        return key.substring(key.lastIndexOf("/") + 1, key.length());
+    }
+
     private String getDestBucket() {
-        return this.jobInfo.getDisableReducer() ? this.jobInfo.getReducerOutputBucket() : this.jobInfo.getMapperOutputBucket();
+        if (this.jobInfo.getDisableReducer())
+            return this.jobInfo.getReducerOutputBucket();
+        return this.jobInfo.getMapperOutputBucket();
     }
-
-    private String processKey(ObjectInfoSimple objectInfoSimple) throws IOException {
-        S3Object object = s3Client.getObject(objectInfoSimple.getBucket(), objectInfoSimple.getKey());
-        S3ObjectInputStream objectContentRawStream = object.getObjectContent();
-        BufferedReader objectBufferedReader = new BufferedReader(new InputStreamReader(objectContentRawStream));
-
-        String result = this.mapperLogic.map(objectBufferedReader);
-
-        objectBufferedReader.close();
-        objectContentRawStream.close();
-        object.close();
-
-        return result;
-    }
-
 }
