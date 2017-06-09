@@ -22,7 +22,9 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
 
     @Override
     public String handleRequest(ReducerWrapperInfo reducerWrapperInfo, Context context) {
+
         try {
+
             this.reducerLogic = instantiateReducerClass();
 
             this.jobInfo = JobInfoProvider.getJobInfo();
@@ -53,15 +55,12 @@ public class ReducerWrapper implements RequestHandler<ReducerWrapperInfo, String
 
 
     private void storeResult(String result, Boolean last) throws IOException {
+
         Commons.storeObject(Commons.TEXT_TYPE,
                 result,
                 jobInfo.getReducerOutputBucket(),
-                getDestKey(last));
-    }
-
-    private String getDestKey(Boolean last) {
-        if (last)
-            return this.jobId + "/result";
-        return this.jobId + "/" + this.reducerWrapperInfo.getStep() + "-reducer-" + this.reducerWrapperInfo.getId();
+                last ?
+                        this.jobId + "/result" :
+                        this.jobId + "/" + this.reducerWrapperInfo.getStep() + "-reducer-" + this.reducerWrapperInfo.getId());
     }
 }

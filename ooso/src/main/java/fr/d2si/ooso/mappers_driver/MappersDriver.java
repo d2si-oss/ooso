@@ -29,10 +29,12 @@ public class MappersDriver implements RequestHandler<Void, String> {
 
             validateParamsOrFail();
 
-            List<List<ObjectInfoSimple>> batches = getBatches();
+            List<List<ObjectInfoSimple>> batches = Commons.getBatches(
+                    this.jobInfo.getJobInputBucket(),
+                    this.jobInfo.getMapperMemory(),
+                    this.jobInfo.getMapperForceBatchSize());
 
             invokeMappersListener();
-
             invokeMappers(batches);
 
         } catch (Exception e) {
@@ -43,6 +45,7 @@ public class MappersDriver implements RequestHandler<Void, String> {
     }
 
     private void cleanup() {
+
         List<S3ObjectSummary> mapOutput = Commons.getBucketObjectSummaries(this.jobInfo.getMapperOutputBucket(), this.jobId + "/");
         List<S3ObjectSummary> reduceOutput = Commons.getBucketObjectSummaries(this.jobInfo.getReducerOutputBucket(), this.jobId + "/");
 
@@ -51,6 +54,7 @@ public class MappersDriver implements RequestHandler<Void, String> {
 
         for (S3ObjectSummary object : reduceOutput)
             this.s3Client.deleteObject(object.getBucketName(), object.getKey());
+
     }
 
     private void validateParamsOrFail() {
@@ -68,23 +72,18 @@ public class MappersDriver implements RequestHandler<Void, String> {
             throw new AmazonS3Exception("Bad parameter <reducerForceBatchSize>: Reducer batch size must be greater or equal than 2");
     }
 
-    private List<List<ObjectInfoSimple>> getBatches() {
-        return Commons.getBatches(
-                this.jobInfo.getJobInputBucket(),
-                this.jobInfo.getMapperMemory(),
-                this.jobInfo.getMapperForceBatchSize());
-    }
-
     private void invokeMappersListener() {
-        Commons.invokeLambdaAsync(this.jobInfo.getMappersListenerFunctionName());
+        Commons.invokeLambdaAsync(this.jobInfo.getMappersListenerFunctionName(), null);
     }
 
     private void invokeMappers(List<List<ObjectInfoSimple>> batches) throws InterruptedException {
         int currentMapperId = 0;
 
         for (List<ObjectInfoSimple> batch : batches) {
-            MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId++);
+
+            MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId);
             Commons.invokeLambdaAsync(this.jobInfo.getMapperFunctionName(), mapperWrapperInfo);
+            currentMapperId++;
         }
     }
 

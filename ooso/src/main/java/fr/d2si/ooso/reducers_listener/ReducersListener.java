@@ -23,7 +23,9 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
             //if there is only one file to return, we know that it's the final reducer, there is no need to listen for results
             if (reducersListenerInfo.getExpectedFilesCount() != 1) {
 
-                int currentReducersOutputFiles = getCurrentReducerOutputCount(reducersListenerInfo);
+                int currentReducersOutputFiles = Commons.getBucketObjectSummaries(
+                        jobInfo.getReducerOutputBucket(),
+                        jobInfo.getJobId() + "/" + reducersListenerInfo.getStep() + "-").size();
 
                 if (currentReducersOutputFiles == reducersListenerInfo.getExpectedFilesCount())
                     invokeNextReducerCoordinator();
@@ -39,18 +41,12 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
         return null;
     }
 
-    private int getCurrentReducerOutputCount(ReducersListenerInfo reducersListenerInfo) {
-        return Commons.getBucketObjectSummaries(
-                jobInfo.getReducerOutputBucket(),
-                jobInfo.getJobId() + "/" + reducersListenerInfo.getStep() + "-").size();
+    private void invokeReducersListener() {
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), this.reducersListenerInfo);
     }
 
     private void invokeNextReducerCoordinator() {
         ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(this.reducersListenerInfo.getStep() + 1);
         Commons.invokeLambdaAsync(this.jobInfo.getReducersDriverFunctionName(), reducersDriverInfo);
-    }
-
-    private void invokeReducersListener() {
-        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), this.reducersListenerInfo);
     }
 }
