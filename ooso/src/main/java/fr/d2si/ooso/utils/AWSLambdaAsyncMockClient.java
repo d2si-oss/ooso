@@ -49,7 +49,8 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
 
             String functionClassName = lambdaHandlerMapping.get(functionName);
 
-            Class<?> functionClass = getLambdaClass(functionClassName);
+            Class functionClass = getLambdaClass(functionClassName);
+
             invokeLambda(functionClass, payload);
 
         } catch (Exception e) {
@@ -58,7 +59,7 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         return new InvokeResult().withStatusCode(200);
     }
 
-    private Class<?> getLambdaClass(String functionClassName) throws ClassNotFoundException {
+    private Class getLambdaClass(String functionClassName) throws ClassNotFoundException {
         return getClass().getClassLoader().loadClass(functionClassName);
     }
 
@@ -70,14 +71,14 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         threadPool.submit(() -> functionClassInstance.handleRequest(lambdaPayload, new MockContext()));
     }
 
-    private Class<?> getLambdaPayloadClass(Class<?> functionClass) {
-        Class<?> payloadClass = null;
+    private Class getLambdaPayloadClass(Class functionClass) {
 
-        for (Method method : functionClass.getDeclaredMethods()) {
-            if (method.getName().equals("handleRequest")) {
+        Class payloadClass = null;
+
+        for (Method method : functionClass.getDeclaredMethods())
+            if (method.getName().equals("handleRequest") && !method.isSynthetic() && !method.isBridge())
                 payloadClass = method.getParameterTypes()[0];
-            }
-        }
+
         return payloadClass;
     }
 
