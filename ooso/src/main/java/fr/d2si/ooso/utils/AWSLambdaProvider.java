@@ -5,6 +5,9 @@ import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 
 public class AWSLambdaProvider {
 
+    private AWSLambdaProvider() {
+    }
+
     public static AWSLambda getLambdaClient() {
         String smr_stage = System.getenv().get("SMR_STAGE");
         if (smr_stage.equals("DEV"))
@@ -19,8 +22,5 @@ public class AWSLambdaProvider {
 
     private static class FakeAWSLambdaHolder {
         private static final AWSLambdaAsyncMockClient LAMBDA_CLIENT = new AWSLambdaAsyncMockClient();
-    }
-
-    private AWSLambdaProvider() {
     }
 }
