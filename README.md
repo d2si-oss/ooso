@@ -3,7 +3,7 @@
 </p>
 
 [![Build Status](https://travis-ci.org/d2si-oss/ooso.svg?branch=master)](https://travis-ci.org/d2si-oss/ooso)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/fr.d2-si/ooso/badge.svg)](https://search.maven.org/#artifactdetails%7Cfr.d2-si%7Cooso%7C0.0.2%7Cjar)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/fr.d2-si/ooso/badge.svg)](https://search.maven.org/#artifactdetails%7Cfr.d2-si%7Cooso%7C0.0.3%7Cjar)
 
 Ooso lets you run MapReduce jobs in a serverless way.
 It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/).
@@ -83,7 +83,7 @@ Declare the library dependency in the `pom.xml` file
         <dependency>
             <groupId>fr.d2-si</groupId>
             <artifactId>ooso</artifactId>
-            <version>0.0.2</version>
+            <version>0.0.3</version>
         </dependency>
     ...
     </dependencies>
