@@ -154,7 +154,7 @@ Below is the description of some attributes (the rest is self explanatory).
 |reducerOutputBucket|The bucket where the reducers will put their results|
 |reducerMemory and mapperMemory|The amount of memory(and therefore other resources) allocated to the lambda functions. They are used internally by the library to compute the batch size that each mapper/reducer will process.|
 |mapperForceBatchSize and reducerForceBatchSize|Used to force the library to use the specified batch size instead of automatically computing it. **`reducerForceBatchSize` must be greater or equal than 2**|
-|disableReducer|Tf set to "true", disables the reducer|
+|disableReducer|If set to "true", disables the reducer|
 
 ### 5. Project packaging
 In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#4-deployment) of the lambda, you need to [install maven](https://maven.apache.org/install.html).
