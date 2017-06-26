@@ -3,23 +3,26 @@ package fr.d2si.ooso.mappers_listener;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import fr.d2si.ooso.reducers_driver.ReducersDriverInfo;
-import fr.d2si.ooso.utils.Commons;
 import fr.d2si.ooso.utils.JobInfo;
-import fr.d2si.ooso.utils.JobInfoProvider;
 
-public class MappersListener implements RequestHandler<Void, String> {
+import static fr.d2si.ooso.utils.Commons.*;
+
+public class MappersListener implements RequestHandler<MappersListenerInfo, String> {
     private static final int HEARTBEAT_INTERVAL = 500;
 
+    private JobInfo jobInfo;
+    private MappersListenerInfo mappersListenerInfo;
+
     @Override
-    public String handleRequest(Void aVoid, Context context) {
+    public String handleRequest(MappersListenerInfo mappersListenerInfo, Context context) {
         try {
-            JobInfo jobInfo = JobInfoProvider.getJobInfo();
+            this.mappersListenerInfo = mappersListenerInfo;
 
-            int currentMappersOutputFiles =
-                    !jobInfo.getDisableReducer() ? Commons.getBucketObjectSummaries(jobInfo.getMapperOutputBucket(), jobInfo.getJobId()).size() :
-                            Commons.getBucketObjectSummaries(jobInfo.getReducerOutputBucket(), jobInfo.getJobId()).size();
+            this.jobInfo = mappersListenerInfo.getJobInfo();
 
-            int expectedMappersOutputFiles = Commons.getBucketObjectSummaries(jobInfo.getJobInputBucket()).size();
+            int currentMappersOutputFiles = getCurrentMappersOutputCount();
+
+            int expectedMappersOutputFiles = getExpectedMappersOutputCount();
 
             if (currentMappersOutputFiles == expectedMappersOutputFiles) {
                 if (!jobInfo.getDisableReducer())
@@ -28,20 +31,28 @@ public class MappersListener implements RequestHandler<Void, String> {
                 Thread.sleep(HEARTBEAT_INTERVAL);
                 invokeMappersListener();
             }
-
-            return String.valueOf(currentMappersOutputFiles == expectedMappersOutputFiles);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return IGNORED_RETURN_VALUE;
     }
 
-    private void invokeMappersListener() {
-        Commons.invokeLambdaAsync("mappers_listener", null);
+    private int getCurrentMappersOutputCount() {
+        if (!jobInfo.getDisableReducer())
+            return getBucketObjectSummaries(jobInfo.getMapperOutputBucket(), jobInfo.getJobId()).size();
+        return getBucketObjectSummaries(jobInfo.getReducerOutputBucket(), jobInfo.getJobId()).size();
+    }
+
+    private int getExpectedMappersOutputCount() {
+        return getBucketObjectSummaries(jobInfo.getJobInputBucket()).size();
     }
 
     private void invokeReducerCoordinator() {
-        ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(0);
-        Commons.invokeLambdaAsync("reducers_driver", reducersDriverInfo);
+        ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(0, this.mappersListenerInfo.getReducerInBase64(), this.jobInfo);
+        invokeLambdaAsync(this.jobInfo.getReducersDriverFunctionName(), reducersDriverInfo);
     }
 
+    private void invokeMappersListener() {
+        invokeLambdaAsync(this.jobInfo.getMappersListenerFunctionName(), this.mappersListenerInfo);
+    }
 }

@@ -6,7 +6,11 @@ public class JobInfo {
     private String mapperOutputBucket;
     private String reducerOutputBucket;
     private String mapperFunctionName;
+    private String mappersDriverFunctionName;
+    private String mappersListenerFunctionName;
     private String reducerFunctionName;
+    private String reducersDriverFunctionName;
+    private String reducersListenerFunctionName;
     private String statusTable;
     private String mapperMemory;
     private String reducerMemory;
@@ -17,13 +21,17 @@ public class JobInfo {
     public JobInfo() {
     }
 
-    public JobInfo(String jobId, String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String mapperFunctionName, String reducerFunctionName, String statusTable, String mapperMemory, String reducerMemory, String mapperForceBatchSize, String reducerForceBatchSize, String disableReducer) {
+    public JobInfo(String jobId, String jobInputBucket, String mapperOutputBucket, String reducerOutputBucket, String mapperFunctionName, String mappersDriverFunctionName, String mappersListenerFunctionName, String reducerFunctionName, String reducersDriverFunctionName, String reducersListenerFunctionName, String statusTable, String mapperMemory, String reducerMemory, String mapperForceBatchSize, String reducerForceBatchSize, String disableReducer) {
         this.jobId = jobId;
         this.jobInputBucket = jobInputBucket;
         this.mapperOutputBucket = mapperOutputBucket;
         this.reducerOutputBucket = reducerOutputBucket;
         this.mapperFunctionName = mapperFunctionName;
+        this.mappersDriverFunctionName = mappersDriverFunctionName;
+        this.mappersListenerFunctionName = mappersListenerFunctionName;
         this.reducerFunctionName = reducerFunctionName;
+        this.reducersDriverFunctionName = reducersDriverFunctionName;
+        this.reducersListenerFunctionName = reducersListenerFunctionName;
         this.statusTable = statusTable;
         this.mapperMemory = mapperMemory;
         this.reducerMemory = reducerMemory;
@@ -126,6 +134,38 @@ public class JobInfo {
 
     public void setDisableReducer(String disableReducer) {
         this.disableReducer = disableReducer;
+    }
+
+    public String getMappersDriverFunctionName() {
+        return mappersDriverFunctionName;
+    }
+
+    public void setMappersDriverFunctionName(String mappersDriverFunctionName) {
+        this.mappersDriverFunctionName = mappersDriverFunctionName;
+    }
+
+    public String getMappersListenerFunctionName() {
+        return mappersListenerFunctionName;
+    }
+
+    public void setMappersListenerFunctionName(String mappersListenerFunctionName) {
+        this.mappersListenerFunctionName = mappersListenerFunctionName;
+    }
+
+    public String getReducersDriverFunctionName() {
+        return reducersDriverFunctionName;
+    }
+
+    public void setReducersDriverFunctionName(String reducersDriverFunctionName) {
+        this.reducersDriverFunctionName = reducersDriverFunctionName;
+    }
+
+    public String getReducersListenerFunctionName() {
+        return reducersListenerFunctionName;
+    }
+
+    public void setReducersListenerFunctionName(String reducersListenerFunctionName) {
+        this.reducersListenerFunctionName = reducersListenerFunctionName;
     }
 }
 

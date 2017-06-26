@@ -9,6 +9,10 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -17,61 +21,34 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class AWSLambdaAsyncMockClient implements AWSLambda {
+    private final static Gson GSON = new GsonBuilder().create();
+    private JobInfo jobInfo;
     private Map<String, String> lambdaHandlerMapping;
     private ErrorDetectingThreadPool threadPool;
 
-    private class ErrorDetectingThreadPool extends ThreadPoolExecutor {
-
-        private boolean exceptionOccured = false;
-        private Exception exception;
-
-        ErrorDetectingThreadPool() {
-            super(0, Integer.MAX_VALUE,
-                    60L, TimeUnit.SECONDS,
-                    new SynchronousQueue<>());
-        }
-
-        @Override
-        protected void afterExecute(Runnable r, Throwable t) {
-            super.afterExecute(r, t);
-            if (t == null && r instanceof Future<?>) {
-                try {
-                    ((Future<?>) r).get();
-                } catch (CancellationException ce) {
-                    t = ce;
-                } catch (ExecutionException ee) {
-                    t = ee.getCause();
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt(); // ignore/reset
-                }
-            }
-            if (t != null) {
-                this.exceptionOccured = true;
-                this.exception = (Exception) t;
-                this.shutdownNow();
-            }
-        }
-
-        boolean isExceptionOccured() {
-            return exceptionOccured;
-        }
-
-        Exception getException() {
-            return exception;
-        }
-    }
 
     public AWSLambdaAsyncMockClient() {
         lambdaHandlerMapping = new HashMap<>(6);
         threadPool = new ErrorDetectingThreadPool();
-
-        lambdaHandlerMapping.put("mappers_driver", "fr.d2si.ooso.mappers_driver.MappersDriver");
-        lambdaHandlerMapping.put("reducers_driver", "fr.d2si.ooso.reducers_driver.ReducersDriver");
-        lambdaHandlerMapping.put("mapper", "fr.d2si.ooso.mapper_wrapper.MapperWrapper");
-        lambdaHandlerMapping.put("reducer", "fr.d2si.ooso.reducer_wrapper.ReducerWrapper");
-        lambdaHandlerMapping.put("reducers_listener", "fr.d2si.ooso.reducers_listener.ReducersListener");
-        lambdaHandlerMapping.put("mappers_listener", "fr.d2si.ooso.mappers_listener.MappersListener");
+        this.jobInfo = loadJobInfo();
+        lambdaHandlerMapping.put(jobInfo.getMappersDriverFunctionName(), "fr.d2si.ooso.mappers_driver.MappersDriver");
+        lambdaHandlerMapping.put(jobInfo.getReducersDriverFunctionName(), "fr.d2si.ooso.reducers_driver.ReducersDriver");
+        lambdaHandlerMapping.put(jobInfo.getMapperFunctionName(), "fr.d2si.ooso.mapper_wrapper.MapperWrapper");
+        lambdaHandlerMapping.put(jobInfo.getReducerFunctionName(), "fr.d2si.ooso.reducer_wrapper.ReducerWrapper");
+        lambdaHandlerMapping.put(jobInfo.getMappersListenerFunctionName(), "fr.d2si.ooso.mappers_listener.MappersListener");
+        lambdaHandlerMapping.put(jobInfo.getReducersListenerFunctionName(), "fr.d2si.ooso.reducers_listener.ReducersListener");
     }
+
+    private JobInfo loadJobInfo() {
+        try (InputStream driverInfoStream = getClass().getClassLoader().getResourceAsStream("jobInfo.json");
+             BufferedReader driverInfoReader = new BufferedReader(new InputStreamReader(driverInfoStream))) {
+            Gson gson = new Gson();
+            return gson.fromJson(driverInfoReader, JobInfo.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @Override
     public InvokeResult invoke(InvokeRequest invokeRequest) {
@@ -86,7 +63,8 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
 
             String functionClassName = lambdaHandlerMapping.get(functionName);
 
-            Class<?> functionClass = getLambdaClass(functionClassName);
+            Class functionClass = getLambdaClass(functionClassName);
+
             invokeLambda(functionClass, payload);
 
         } catch (Exception e) {
@@ -95,29 +73,31 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         return new InvokeResult().withStatusCode(200);
     }
 
-    private Class<?> getLambdaClass(String functionClassName) throws ClassNotFoundException {
+    private Class getLambdaClass(String functionClassName) throws ClassNotFoundException {
         return getClass().getClassLoader().loadClass(functionClassName);
     }
 
-    private Class<?> getLambdaPayloadClass(Class<?> functionClass) {
-        Class<?> payloadClass = null;
-
-        for (Method method : functionClass.getDeclaredMethods()) {
-            if (method.getName().equals("handleRequest")) {
-                payloadClass = method.getParameterTypes()[0];
-            }
-        }
-        return payloadClass;
-    }
-
-    private void invokeLambda(Class<?> functionClass, ByteBuffer payload) throws IllegalAccessException, InstantiationException, InvocationTargetException, ExecutionException, InterruptedException {
-        Gson gson = new GsonBuilder().serializeNulls().setLenient().create();
-        Class<?> lambdaPayloadClass = getLambdaPayloadClass(functionClass);
-        Object lambdaPayload = gson.fromJson(new String(payload.array()), lambdaPayloadClass);
+    private void invokeLambda(Class functionClass, ByteBuffer payload) throws IllegalAccessException, InstantiationException, InvocationTargetException, ExecutionException, InterruptedException {
+        Class lambdaPayloadClass = getLambdaPayloadClass(functionClass);
+        Object lambdaPayload = getPayloadObjectFromJson(payload, lambdaPayloadClass);
 
         RequestHandler functionClassInstance = ((RequestHandler) functionClass.newInstance());
         threadPool.submit(() -> functionClassInstance.handleRequest(lambdaPayload, new MockContext()));
+    }
 
+    private Class getLambdaPayloadClass(Class functionClass) {
+
+        Class payloadClass = null;
+
+        for (Method method : functionClass.getDeclaredMethods())
+            if (method.getName().equals("handleRequest") && !method.isSynthetic() && !method.isBridge())
+                payloadClass = method.getParameterTypes()[0];
+
+        return payloadClass;
+    }
+
+    private Object getPayloadObjectFromJson(ByteBuffer payload, Class lambdaPayloadClass) {
+        return GSON.fromJson(new String(payload.array()), lambdaPayloadClass);
     }
 
     public void awaitWorkflowEnd() throws Exception {
@@ -279,6 +259,47 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
     @Override
     public ResponseMetadata getCachedResponseMetadata(AmazonWebServiceRequest amazonWebServiceRequest) {
         return null;
+    }
+
+    private class ErrorDetectingThreadPool extends ThreadPoolExecutor {
+
+        private boolean exceptionOccured = false;
+        private Exception exception;
+
+        ErrorDetectingThreadPool() {
+            super(0, Integer.MAX_VALUE,
+                    60L, TimeUnit.SECONDS,
+                    new SynchronousQueue<>());
+        }
+
+        @Override
+        protected void afterExecute(Runnable r, Throwable t) {
+            super.afterExecute(r, t);
+            if (t == null && r instanceof Future<?>) {
+                try {
+                    ((Future<?>) r).get();
+                } catch (CancellationException ce) {
+                    t = ce;
+                } catch (ExecutionException ee) {
+                    t = ee.getCause();
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt(); // ignore/reset
+                }
+            }
+            if (t != null) {
+                this.exceptionOccured = true;
+                this.exception = (Exception) t;
+                this.shutdownNow();
+            }
+        }
+
+        boolean isExceptionOccured() {
+            return exceptionOccured;
+        }
+
+        Exception getException() {
+            return exception;
+        }
     }
 
 
