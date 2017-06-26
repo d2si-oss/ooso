@@ -10,6 +10,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 
+import static fr.d2si.ooso.utils.Commons.IGNORED_RETURN_VALUE;
+
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
     private MapperAbstract mapperLogic;
 
@@ -20,14 +22,14 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
 
     @Override
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
-
         try {
             this.s3Client = AmazonS3Provider.getS3Client();
-            this.jobInfo = JobInfoProvider.getJobInfo();
-
-            this.jobId = this.jobInfo.getJobId();
 
             this.mapperWrapperInfo = mapperWrapperInfo;
+
+            this.jobInfo = this.mapperWrapperInfo.getJobInfo();
+
+            this.jobId = this.jobInfo.getJobId();
 
             this.mapperLogic = instantiateMapperClass();
 
@@ -38,11 +40,11 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return "OK";
+        return IGNORED_RETURN_VALUE;
     }
 
-    private MapperAbstract instantiateMapperClass() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        return (MapperAbstract) getClass().getClassLoader().loadClass("mapper.Mapper").newInstance();
+    private MapperAbstract instantiateMapperClass() throws ClassNotFoundException, IOException {
+        return (MapperAbstract) Commons.base64ToObject(this.mapperWrapperInfo.getMapperLogicInBase64());
     }
 
     private void processBatch(List<ObjectInfoSimple> batch) throws IOException {

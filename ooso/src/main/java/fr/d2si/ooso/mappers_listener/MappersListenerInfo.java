@@ -1,27 +1,17 @@
-package fr.d2si.ooso.reducers_driver;
+package fr.d2si.ooso.mappers_listener;
 
 import fr.d2si.ooso.utils.JobInfo;
 
-public class ReducersDriverInfo {
-    private int step;
+public class MappersListenerInfo {
     private String reducerInBase64;
     private JobInfo jobInfo;
 
-    public ReducersDriverInfo() {
+    public MappersListenerInfo() {
     }
 
-    public ReducersDriverInfo(int step, String reducerInBase64, JobInfo jobInfo) {
-        this.step = step;
+    public MappersListenerInfo(String reducerInBase64, JobInfo jobInfo) {
         this.reducerInBase64 = reducerInBase64;
         this.jobInfo = jobInfo;
-    }
-
-    public int getStep() {
-        return step;
-    }
-
-    public void setStep(int step) {
-        this.step = step;
     }
 
     public String getReducerInBase64() {

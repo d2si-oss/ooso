@@ -1,11 +1,13 @@
 package integration_test;
 
-import com.amazonaws.services.lambda.model.InvocationType;
-import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.s3.AmazonS3;
+import fr.d2si.ooso.launcher.Launcher;
 import fr.d2si.ooso.utils.*;
-import org.junit.*;
+import mapper.Mapper;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import reducer.Reducer;
 
 import java.io.File;
 
@@ -16,7 +18,7 @@ public class NormalExecutionTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        jobInfo = JobInfoProvider.getJobInfo();
+        jobInfo = Commons.loadJobInfo();
 
         lambdaClient = (AWSLambdaAsyncMockClient) AWSLambdaProvider.getLambdaClient();
 
@@ -34,16 +36,6 @@ public class NormalExecutionTest {
 
     }
 
-    @Test
-    public void normalExec() throws Exception {
-        lambdaClient.invoke(new InvokeRequest()
-                .withPayload("")
-                .withInvocationType(InvocationType.Event)
-                .withFunctionName(jobInfo.getMappersDriverFunctionName()));
-
-        lambdaClient.awaitWorkflowEnd();
-    }
-
     @AfterClass
     public static void tearDown() throws Exception {
         File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/test-data/250mb");
@@ -58,5 +50,15 @@ public class NormalExecutionTest {
         s3Client.deleteBucket(jobInfo.getMapperOutputBucket());
         s3Client.deleteBucket(jobInfo.getReducerOutputBucket());
 
+    }
+
+    @Test
+    public void normalExec() throws Exception {
+        new Launcher()
+                .withMapper(new Mapper())
+                .withReducer(new Reducer())
+                .launchJob();
+
+        lambdaClient.awaitWorkflowEnd();
     }
 }
