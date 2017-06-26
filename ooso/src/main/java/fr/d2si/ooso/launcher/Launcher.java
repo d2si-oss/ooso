@@ -33,8 +33,8 @@ public class Launcher {
 
     public void launchJob() {
         try {
-            loadJobInfo();
             configureLogger();
+            loadJobInfo();
 
             if (this.mapper == null || (!this.jobInfo.getDisableReducer() && reducer == null)) {
                 throw new RuntimeException("You must set the mapper and reducer classes");
