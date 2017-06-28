@@ -31,8 +31,7 @@ public class Reducer extends ReducerAbstract {
 
             return gson.toJson(reduceTransactionCountPerProduct);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-        return null;
     }
 }

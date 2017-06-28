@@ -4,7 +4,8 @@ import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import fr.d2si.ooso.utils.*;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -27,7 +28,8 @@ public class NormalExecutionTest {
         s3Client.createBucket(jobInfo.getReducerOutputBucket());
 
         //putting test data in local s3 bucket
-        File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/test-data/250mb");
+        System.out.println(new File("").getAbsoluteFile().getParentFile().getParent() + "/test-data/250mb");
+        File dataDir = new File(new File("").getAbsoluteFile().getParentFile().getParent() + "/test-data/250mb");
         for (File file : dataDir.listFiles()) {
             Commons.storeObject(Commons.TEXT_TYPE, file, Commons.getBucketFromFullPath(jobInfo.getJobInputBucket()), "250mb/" + file.getName());
         }
@@ -46,7 +48,7 @@ public class NormalExecutionTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/test-data/250mb");
+        File dataDir = new File(new File("").getAbsoluteFile().getParentFile().getParent() + "/test-data/250mb");
         for (File file : dataDir.listFiles())
             s3Client.deleteObject(Commons.getBucketFromFullPath(jobInfo.getJobInputBucket()), "250mb/" + file.getName());
 
