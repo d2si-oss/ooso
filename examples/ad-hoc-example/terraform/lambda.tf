@@ -15,18 +15,18 @@ provider "aws" {
   region = "${var.region}"
 }
 
-resource "aws_s3_bucket" "demo1-mapperOutputBucket" {
+resource "aws_s3_bucket" "adhoc-mapperOutputBucket" {
   bucket = "${data.external.jobInfo.result.mapperOutputBucket}"
   force_destroy = true
 }
 
-resource "aws_s3_bucket" "demo1-reducerOutputBucket" {
+resource "aws_s3_bucket" "adhoc-reducerOutputBucket" {
   bucket = "${data.external.jobInfo.result.reducerOutputBucket}"
   force_destroy = true
 }
 
-resource "aws_iam_role" "demo1-iamForLambda" {
-  name = "demo1-iamForLambda"
+resource "aws_iam_role" "adhoc-iamForLambda" {
+  name = "adhoc-iamForLambda"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -43,24 +43,24 @@ resource "aws_iam_role" "demo1-iamForLambda" {
 EOF
 }
 
-resource "aws_iam_policy_attachment" "demo1-lambdaAccessAttachment" {
-  name = "demo1-lambdaAccessAttachment"
+resource "aws_iam_policy_attachment" "adhoc-lambdaAccessAttachment" {
+  name = "adhoc-lambdaAccessAttachment"
   roles = [
-    "${aws_iam_role.demo1-iamForLambda.name}"]
+    "${aws_iam_role.adhoc-iamForLambda.name}"]
   policy_arn = "arn:aws:iam::aws:policy/AWSLambdaFullAccess"
 }
 
-resource "aws_iam_policy_attachment" "demo1-s3AccessAttachment" {
-  name = "demo1-s3AccessAttachment"
+resource "aws_iam_policy_attachment" "adhoc-s3AccessAttachment" {
+  name = "adhoc-s3AccessAttachment"
   roles = [
-    "${aws_iam_role.demo1-iamForLambda.name}"]
+    "${aws_iam_role.adhoc-iamForLambda.name}"]
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
-resource "aws_lambda_function" "demo1-mappers_driver" {
+resource "aws_lambda_function" "adhoc-mappers_driver" {
   filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.mappersDriverFunctionName}"
-  role = "${aws_iam_role.demo1-iamForLambda.arn}"
+  role = "${aws_iam_role.adhoc-iamForLambda.arn}"
   handler = "fr.d2si.ooso.mappers_driver.MappersDriver"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
@@ -73,10 +73,10 @@ resource "aws_lambda_function" "demo1-mappers_driver" {
   }
 }
 
-resource "aws_lambda_function" "demo1-reducers_driver" {
+resource "aws_lambda_function" "adhoc-reducers_driver" {
   filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.reducersDriverFunctionName}"
-  role = "${aws_iam_role.demo1-iamForLambda.arn}"
+  role = "${aws_iam_role.adhoc-iamForLambda.arn}"
   handler = "fr.d2si.ooso.reducers_driver.ReducersDriver"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
@@ -89,10 +89,10 @@ resource "aws_lambda_function" "demo1-reducers_driver" {
   }
 }
 
-resource "aws_lambda_function" "demo1-mapper" {
+resource "aws_lambda_function" "adhoc-mapper" {
   filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.mapperFunctionName}"
-  role = "${aws_iam_role.demo1-iamForLambda.arn}"
+  role = "${aws_iam_role.adhoc-iamForLambda.arn}"
   handler = "fr.d2si.ooso.mapper_wrapper.MapperWrapper"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
@@ -105,10 +105,10 @@ resource "aws_lambda_function" "demo1-mapper" {
   }
 }
 
-resource "aws_lambda_function" "demo1-reducer" {
+resource "aws_lambda_function" "adhoc-reducer" {
   filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.reducerFunctionName}"
-  role = "${aws_iam_role.demo1-iamForLambda.arn}"
+  role = "${aws_iam_role.adhoc-iamForLambda.arn}"
   handler = "fr.d2si.ooso.reducer_wrapper.ReducerWrapper"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
@@ -121,10 +121,10 @@ resource "aws_lambda_function" "demo1-reducer" {
   }
 }
 
-resource "aws_lambda_function" "demo1-mappersListener" {
+resource "aws_lambda_function" "adhoc-mappersListener" {
   filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.mappersListenerFunctionName}"
-  role = "${aws_iam_role.demo1-iamForLambda.arn}"
+  role = "${aws_iam_role.adhoc-iamForLambda.arn}"
   handler = "fr.d2si.ooso.mappers_listener.MappersListener"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
@@ -137,10 +137,10 @@ resource "aws_lambda_function" "demo1-mappersListener" {
   }
 }
 
-resource "aws_lambda_function" "demo1-reducersListener" {
+resource "aws_lambda_function" "adhoc-reducersListener" {
   filename = "../target/job.jar"
   function_name = "${data.external.jobInfo.result.reducersListenerFunctionName}"
-  role = "${aws_iam_role.demo1-iamForLambda.arn}"
+  role = "${aws_iam_role.adhoc-iamForLambda.arn}"
   handler = "fr.d2si.ooso.reducers_listener.ReducersListener"
   source_code_hash = "${base64sha256(file("../target/job.jar"))}"
   runtime = "java8"
