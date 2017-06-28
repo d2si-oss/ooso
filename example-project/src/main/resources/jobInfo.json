@@ -12,6 +12,6 @@
   "reducersDriverFunctionName": "reducers_driver",
   "reducersListenerFunctionName": "reducers_listener",
   "jobId": "f4a88b72-357d-11e7-9140-34f39a0a3e44",
-  "jobInputBucket": "my-dataset/500mb",
+  "jobInputBucket": "test-data/250mb",
   "mapperForceBatchSize": "-1"
 }

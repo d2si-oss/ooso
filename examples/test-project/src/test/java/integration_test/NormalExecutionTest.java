@@ -41,7 +41,7 @@ public class NormalExecutionTest {
         lambdaClient.invoke(new InvokeRequest()
                 .withPayload("")
                 .withInvocationType(InvocationType.Event)
-                .withFunctionName("mappers_driver"));
+                .withFunctionName(jobInfo.getMappersDriverFunctionName()));
 
         lambdaClient.awaitWorkflowEnd();
     }

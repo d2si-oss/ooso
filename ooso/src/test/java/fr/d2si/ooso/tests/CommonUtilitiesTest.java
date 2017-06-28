@@ -5,14 +5,13 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.google.gson.Gson;
 import fr.d2si.ooso.utils.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.List;
@@ -25,11 +24,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public class CommonUtilitiesTest {
-    private static JobInfo jobInfo;
-
-    private static AmazonS3 s3Client;
     private static final String DUMMY_BUCKET_NAME = "dummy-bucket";
-
     private static final Map<String, String> KEY_CONTENT_MAPPING = Collections.unmodifiableMap(
             Stream.of(
                     new SimpleEntry<>("pref1/dummy1", "dummy1"),
@@ -48,10 +43,12 @@ public class CommonUtilitiesTest {
                     new SimpleEntry<>("pref2/dummy6", "dummy6"),
                     new SimpleEntry<>("pref2/dummy7", "dummy7")
             ).collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)));
+    private static JobInfo jobInfo;
+    private static AmazonS3 s3Client;
 
     @BeforeClass
     public static void setUp() throws Exception {
-        jobInfo = JobInfoProvider.getJobInfo();
+        jobInfo = Commons.loadJobInfo();
 
         s3Client = AmazonS3Provider.getS3Client();
 
@@ -67,6 +64,12 @@ public class CommonUtilitiesTest {
         }
     }
 
+    @AfterClass
+    public static void tearDown() throws Exception {
+        Commons.emptyBucket(DUMMY_BUCKET_NAME);
+        s3Client.deleteBucket(DUMMY_BUCKET_NAME);
+    }
+
     @Test
     public void jobInfoNotNull() throws Exception {
         assertNotNull(jobInfo);
@@ -74,7 +77,7 @@ public class CommonUtilitiesTest {
 
     @Test
     public void jobInfoContainsTrueData() throws Exception {
-        assertEquals(jobInfo.getJobId(), "95bf5dec-34b1-11e7-8072-34f39a0a3e44");
+        assertEquals(jobInfo.getJobId(), "f4a88b72-357d-11e7-9140-34f39a0a3e44");
         assertEquals(jobInfo.getMapperMemory(), 1536);
         assertEquals(jobInfo.getReducerMemory(), 1536);
         assertEquals(jobInfo.getJobInputBucket(), "my-dataset/500mb");
@@ -162,9 +165,27 @@ public class CommonUtilitiesTest {
         assertEquals(storedPrefixedKeys, expectedPrefixedKeys);
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        Commons.emptyBucket(DUMMY_BUCKET_NAME);
-        s3Client.deleteBucket(DUMMY_BUCKET_NAME);
+    @Test
+    public void testSerialization() throws Exception {
+        ObjectSerializationGuineaPig objectSerializationGuineaPig = new ObjectSerializationGuineaPig();
+        objectSerializationGuineaPig.setMessage("Hello there");
+
+        String objectInBase64 = Commons.objectToBase64(objectSerializationGuineaPig);
+
+        ObjectSerializationGuineaPig object = (ObjectSerializationGuineaPig) Commons.base64ToObject(objectInBase64);
+
+        assertEquals("Hello there", object.getMessage());
+    }
+
+    private static class ObjectSerializationGuineaPig implements Serializable {
+        private String message;
+
+        private String getMessage() {
+            return message;
+        }
+
+        private void setMessage(String message) {
+            this.message = message;
+        }
     }
 }

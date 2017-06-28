@@ -10,16 +10,16 @@ import fr.d2si.ooso.utils.JobInfoProvider;
 public class MappersListener implements RequestHandler<Void, String> {
     private static final int HEARTBEAT_INTERVAL = 500;
 
+    private JobInfo jobInfo;
+
     @Override
     public String handleRequest(Void aVoid, Context context) {
         try {
-            JobInfo jobInfo = JobInfoProvider.getJobInfo();
+            this.jobInfo = JobInfoProvider.getJobInfo();
 
-            int currentMappersOutputFiles =
-                    !jobInfo.getDisableReducer() ? Commons.getBucketObjectSummaries(jobInfo.getMapperOutputBucket(), jobInfo.getJobId()).size() :
-                            Commons.getBucketObjectSummaries(jobInfo.getReducerOutputBucket(), jobInfo.getJobId()).size();
+            int currentMappersOutputFiles = getCurrentMappersOutputCount();
 
-            int expectedMappersOutputFiles = Commons.getBucketObjectSummaries(jobInfo.getJobInputBucket()).size();
+            int expectedMappersOutputFiles = getExpectedMappersOutputCount();
 
             if (currentMappersOutputFiles == expectedMappersOutputFiles) {
                 if (!jobInfo.getDisableReducer())
@@ -30,18 +30,28 @@ public class MappersListener implements RequestHandler<Void, String> {
             }
 
             return String.valueOf(currentMappersOutputFiles == expectedMappersOutputFiles);
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void invokeMappersListener() {
-        Commons.invokeLambdaAsync("mappers_listener", null);
+    private int getCurrentMappersOutputCount() {
+        if (!jobInfo.getDisableReducer())
+            return Commons.getBucketObjectSummaries(jobInfo.getMapperOutputBucket(), jobInfo.getJobId()).size();
+        return Commons.getBucketObjectSummaries(jobInfo.getReducerOutputBucket(), jobInfo.getJobId()).size();
+    }
+
+    private int getExpectedMappersOutputCount() {
+        return Commons.getBucketObjectSummaries(jobInfo.getJobInputBucket()).size();
     }
 
     private void invokeReducerCoordinator() {
         ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(0);
-        Commons.invokeLambdaAsync("reducers_driver", reducersDriverInfo);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersDriverFunctionName(), reducersDriverInfo);
     }
 
+    private void invokeMappersListener() {
+        Commons.invokeLambdaAsync(this.jobInfo.getMappersListenerFunctionName());
+    }
 }
