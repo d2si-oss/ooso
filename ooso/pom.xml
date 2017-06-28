@@ -6,7 +6,7 @@
 
     <groupId>fr.d2-si</groupId>
     <artifactId>ooso</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.3</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Ooso is a serverless implementation of the MapReduce algorithm. It is based on managed cloud services,

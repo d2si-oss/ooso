@@ -3,12 +3,9 @@ package fr.d2si.ooso.reducers_listener;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import fr.d2si.ooso.reducers_driver.ReducersDriverInfo;
-
-import static fr.d2si.ooso.utils.Commons.*;
-
+import fr.d2si.ooso.utils.Commons;
 import fr.d2si.ooso.utils.JobInfo;
-
-import static fr.d2si.ooso.utils.Commons.IGNORED_RETURN_VALUE;
+import fr.d2si.ooso.utils.JobInfoProvider;
 
 public class ReducersListener implements RequestHandler<ReducersListenerInfo, String> {
     private static final int HEARTBEAT_INTERVAL = 200;
@@ -21,7 +18,7 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
         try {
             this.reducersListenerInfo = reducersListenerInfo;
 
-            this.jobInfo = this.reducersListenerInfo.getJobInfo();
+            this.jobInfo = JobInfoProvider.getJobInfo();
 
             //if there is only one file to return, we know that it's the final reducer, there is no need to listen for results
             if (reducersListenerInfo.getExpectedFilesCount() != 1) {
@@ -39,24 +36,21 @@ public class ReducersListener implements RequestHandler<ReducersListenerInfo, St
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return IGNORED_RETURN_VALUE;
+        return null;
     }
 
     private int getCurrentReducerOutputCount(ReducersListenerInfo reducersListenerInfo) {
-        return getBucketObjectSummaries(
+        return Commons.getBucketObjectSummaries(
                 jobInfo.getReducerOutputBucket(),
                 jobInfo.getJobId() + "/" + reducersListenerInfo.getStep() + "-").size();
     }
 
     private void invokeNextReducerCoordinator() {
-        ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(
-                this.reducersListenerInfo.getStep() + 1,
-                this.reducersListenerInfo.getReducerInBase64(),
-                this.jobInfo);
-        invokeLambdaAsync(this.jobInfo.getReducersDriverFunctionName(), reducersDriverInfo);
+        ReducersDriverInfo reducersDriverInfo = new ReducersDriverInfo(this.reducersListenerInfo.getStep() + 1);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersDriverFunctionName(), reducersDriverInfo);
     }
 
     private void invokeReducersListener() {
-        invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), this.reducersListenerInfo);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), this.reducersListenerInfo);
     }
 }

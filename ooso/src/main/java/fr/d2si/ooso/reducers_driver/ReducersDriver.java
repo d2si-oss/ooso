@@ -4,30 +4,26 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import fr.d2si.ooso.reducer_wrapper.ReducerWrapperInfo;
 import fr.d2si.ooso.reducers_listener.ReducersListenerInfo;
-import static fr.d2si.ooso.utils.Commons.*;
-
 import fr.d2si.ooso.utils.Commons;
 import fr.d2si.ooso.utils.JobInfo;
+import fr.d2si.ooso.utils.JobInfoProvider;
 import fr.d2si.ooso.utils.ObjectInfoSimple;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
-
-import static fr.d2si.ooso.utils.Commons.IGNORED_RETURN_VALUE;
 
 public class ReducersDriver implements RequestHandler<ReducersDriverInfo, String> {
 
     private JobInfo jobInfo;
 
     private String jobId;
-    private ReducersDriverInfo reducersDriverInfo;
 
 
     @Override
     public String handleRequest(ReducersDriverInfo reducersDriverInfo, Context context) {
         try {
-            this.reducersDriverInfo = reducersDriverInfo;
-
-            this.jobInfo = this.reducersDriverInfo.getJobInfo();
+            this.jobInfo = JobInfoProvider.getJobInfo();
 
             this.jobId = this.jobInfo.getJobId();
 
@@ -36,10 +32,10 @@ public class ReducersDriver implements RequestHandler<ReducersDriverInfo, String
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return IGNORED_RETURN_VALUE;
+        return "OK";
     }
 
-    private void launchReducers(int reduceStep) {
+    private void launchReducers(int reduceStep) throws IOException, InterruptedException {
 
         String inputPrefix = getInputPrefix(reduceStep);
         String inputBucket = whichInputBucket(reduceStep);
@@ -62,7 +58,8 @@ public class ReducersDriver implements RequestHandler<ReducersDriverInfo, String
     }
 
     private List<List<ObjectInfoSimple>> getBatches(String inputPrefix, String inputBucket) {
-        return Commons.getBatches(
+        return Commons
+                .getBatches(
                         inputBucket,
                         this.jobInfo.getReducerMemory(),
                         inputPrefix,
@@ -70,22 +67,20 @@ public class ReducersDriver implements RequestHandler<ReducersDriverInfo, String
     }
 
     private void invokeReducersListener(int step, int batchSize) {
-        ReducersListenerInfo reducersListenerInfo = new ReducersListenerInfo(step, batchSize, this.reducersDriverInfo.getReducerInBase64(), this.jobInfo);
-        invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), reducersListenerInfo);
+        ReducersListenerInfo reducersListenerInfo = new ReducersListenerInfo(step, batchSize);
+        Commons.invokeLambdaAsync(this.jobInfo.getReducersListenerFunctionName(), reducersListenerInfo);
     }
 
-    private void invokeReducers(int reduceStep, List<List<ObjectInfoSimple>> batches) {
+    private void invokeReducers(int reduceStep, List<List<ObjectInfoSimple>> batches) throws InterruptedException, UnsupportedEncodingException {
         int id = 0;
         for (List<ObjectInfoSimple> batch : batches) {
             ReducerWrapperInfo reducerWrapperInfo = new ReducerWrapperInfo(
                     id++,
                     batch,
                     reduceStep,
-                    this.reducersDriverInfo.getReducerInBase64(),
-                    batches.size() == 1,
-                    this.jobInfo);
+                    batches.size() == 1);
 
-            invokeLambdaAsync(this.jobInfo.getReducerFunctionName(), reducerWrapperInfo);
+            Commons.invokeLambdaAsync(this.jobInfo.getReducerFunctionName(), reducerWrapperInfo);
         }
     }
 }
