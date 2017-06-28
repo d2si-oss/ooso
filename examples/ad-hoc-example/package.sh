@@ -4,4 +4,4 @@ set -e
 
 ./generate_job_id.py
 
-mvn package
+mvn -DskipTests package
