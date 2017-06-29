@@ -19,6 +19,6 @@ script:
   - sleep 5
   - cd ooso
   - mvn package
-  - mvn -e org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file -Dfile=target/ooso-0.0.3.jar -DgroupId=fr.d2-si -DartifactId=ooso -Dversion=0.0.3 -Dpackaging=jar -DlocalRepositoryPath=${HOME}/.m2/repository/
+  - mvn -e org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file -Dfile=target/ooso-0.0.4.jar -DgroupId=fr.d2-si -DartifactId=ooso -Dversion=0.0.4 -Dpackaging=jar -DlocalRepositoryPath=${HOME}/.m2/repository/
   - cd ../test-project
   - ./package.sh
