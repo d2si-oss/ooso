@@ -29,7 +29,7 @@ public class NormalExecutionTest {
         s3Client.createBucket(jobInfo.getReducerOutputBucket());
 
         //putting test data in local s3 bucket
-        File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/test-data/250mb");
+        File dataDir = new File(new File("").getAbsoluteFile() + "/test-data/250mb");
         for (File file : dataDir.listFiles()) {
             Commons.storeObject(Commons.TEXT_TYPE, file, Commons.getBucketFromFullPath(jobInfo.getJobInputBucket()), "250mb/" + file.getName());
         }
@@ -38,7 +38,7 @@ public class NormalExecutionTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/test-data/250mb");
+        File dataDir = new File(new File("").getAbsoluteFile() + "/test-data/250mb");
         for (File file : dataDir.listFiles())
             s3Client.deleteObject(Commons.getBucketFromFullPath(jobInfo.getJobInputBucket()), "250mb/" + file.getName());
 

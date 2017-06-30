@@ -90,8 +90,8 @@ Declare the library dependency in the `pom.xml` file
 ```
 
 ### 3. Classes to implement
-Implement your `Mapper` and `Reducer`.
-- The class [Mapper](example-project/src/main/java/mapper/Mapper.java) is the implementation of your mappers. It must extend the `fr.d2si.ooso.mapper.MapperAbstract` class which looks like the following:
+Implement your `Mapper`, `Reducer` and `Launcher`:
+- The class [Mapper](examples/ad-hoc-example-1/src/main/java/mapper/Mapper.java) is the implementation of your mappers. It must extend the `fr.d2si.ooso.mapper.MapperAbstract` class which looks like the following:
     ```java
     public abstract class MapperAbstract {
         public abstract String map(BufferedReader objectBufferedReader);
@@ -99,7 +99,7 @@ Implement your `Mapper` and `Reducer`.
     ```
     The `map` method receives a `BufferedReader` as a parameter which is a reader of the batch part that the mapper lambda processes. The Reader closing is done internally for you.
 
-- The class [Reducer](example-project/src/main/java/reducer/Reducer.java) is the implementation of your reducers. It must extend the `fr.d2si.ooso.reducer.ReducerAbstract` class which looks like the following:
+- The class [Reducer](examples/ad-hoc-example-1/src/main/java/reducer/Reducer.java) is the implementation of your reducers. It must extend the `fr.d2si.ooso.reducer.ReducerAbstract` class which looks like the following:
     ```java
     public abstract class ReducerAbstract {
         public abstract String reduce(List<ObjectInfoSimple> batch);
@@ -120,12 +120,28 @@ Implement your `Mapper` and `Reducer`.
     }
     ```
     **For the reducer, you are responsible of closing the opened readers.**
+- The [Launcher](examples/ad-hoc-example-1/src/main/java/job/jobLauncher.java) is responsible of starting your job.
+    Under the hood, it serializes your `Mapper` and `Reducer` and sends them to your `Mappers Driver` which then propagates them to the rest of the lambdas.
+
+    All you need to do is to create a class with a main method and instantiate a `Launcher` that points to your `Mapper` and `Reducer`. Your class should look like this:
+    ```java
+    public class JobLauncher {
+        public static void main(String[] args) {
+            //setup your launcher
+            Launcher myLauncher = new Launcher()
+                                            .withMapper(new Mapper())
+                                            .withReducer(new Reducer());
+            //launch your job
+            myLauncher.launchJob();
+        }
+    }
+    ```
 
 ### 4. Configuration file
 Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details.
 ```json
 {
-  "jobId": "your_job_id",
+  "jobId": "your-job-id",
   "jobInputBucket": "input",
   "mapperOutputBucket": "mapper-output",
   "reducerOutputBucket": "reducer-output",
@@ -248,18 +264,11 @@ However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terrafo
 ___
 
 ## IV. Running the job
-All you need is to create a class with a main method, instantiate a `Launcher` that points to your `Mapper` and `Reducer`, like this:
- ```java
-public class LaunchJob {
-    public static void main(String[] args) {
-        new Launcher()
-                .withMapper(new Mapper())
-                .withReducer(new Reducer())
-                .launchJob();
-    }
-}
- ```
-You are now ready to start the job by executing your main method.
+In order to run your job, you may execute the main method of the same jar that you used during the deployment. You may either execute it from your IDE or using the command line as follows:
+```bash
+    java -cp job.jar job.JobLauncher
+```
+
 ___
 
  <div>The logo is made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> and is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
