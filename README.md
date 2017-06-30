@@ -147,7 +147,7 @@ Below is the description of some attributes (the rest is self explanatory).
 
 | Attribute| Description|
 |-------------|-------------|
-|jobId|Used to identify a job|
+|jobId|Used to identify a job and separate outputs in order to avoid overwriting data between jobs|
 |jobInputBucket|Contains the dataset splits that each `Mapper` will process|
 |mapperOutputBucket|The bucket where the mappers will put their results|
 |reducerOutputBucket|The bucket where the reducers will put their results|
@@ -158,7 +158,7 @@ Below is the description of some attributes (the rest is self explanatory).
 ### 5. Project packaging
 In order to generate the [jar](https://en.wikipedia.org/wiki/JAR_(file_format)) file used during the [deployment](#4-deployment) of the lambda, you need to [install maven](https://maven.apache.org/install.html).
 
-Then, run `package.sh` script to generate the jobId and create the project jar:
+Then, run `package.sh` script to create the project jar:
 ```
 ./package.sh
 ```
