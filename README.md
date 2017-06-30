@@ -55,12 +55,11 @@ ___
 
 ## II. How to use the library
 ### 1. Project Structure
-The easiest way is to clone the repository and use the provided [example-project](example-project) directory which has the following structure:
+The easiest way is to clone the repository and use the provided [example project](./examples/ad-hoc-example-1) directory which has the following structure:
 
 ```
 .
 ├── package.sh
-├── generate_job_id.py
 ├── provide_job_info.py
 ├── pom.xml
 └── src
@@ -213,7 +212,7 @@ a. Create an IAM role with the following trust policy
 }
 ```
 
-You may create the IAM role using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console), the [command line](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-cli) or our [Terraform template](./example-project/terraform/lambda.tf).
+You may create the IAM role using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console), the [command line](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-cli) or our [Terraform template](./examples/ad-hoc-example-1/terraform/lambda.tf).
 
 b. Attach the following policies to your role
 
@@ -222,7 +221,7 @@ b. Attach the following policies to your role
 
 Note that these policies are too broad. You may use more fine-grained policies/roles for each lambda.
 
-You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html) or our [Terraform template](./example-project/terraform/lambda.tf).
+You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html) or our [Terraform template](./examples/ad-hoc-example-1/terraform/lambda.tf).
 
 ### 3. Lambda functions
 Create the required lambdas with the following details:
@@ -238,8 +237,10 @@ Create the required lambdas with the following details:
 
 We assume that the project jar is located at `example-project/target/job.jar`.
 
-You may attach the policies using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./example-project/terraform/lambda.tf).
+You may create the lambda functions using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./examples/ad-hoc-example-1/terraform/lambda.tf).
 
+**Note that you only need to deploy the lambdas once and for all, even if you change your job configuration and your business logic.
+    This is made possible thanks to the way the Launcher works**
 ### 4. Deployment
 a. The easy way
 

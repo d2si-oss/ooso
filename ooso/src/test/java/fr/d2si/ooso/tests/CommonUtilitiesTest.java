@@ -57,7 +57,7 @@ public class CommonUtilitiesTest {
         s3Client.createBucket(DUMMY_BUCKET_NAME);
 
         //putting test data in local s3 bucket
-        File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/test-data/250mb");
+        File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/examples/ad-hoc-example-1/test-data/250mb");
         for (File file : dataDir.listFiles()) {
             Commons.storeObject(Commons.TEXT_TYPE, file, DUMMY_BUCKET_NAME, "data/" + file.getName());
         }
