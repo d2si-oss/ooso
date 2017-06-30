@@ -239,8 +239,6 @@ We assume that the project jar is located at `example-project/target/job.jar`.
 
 You may create the lambda functions using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./examples/ad-hoc-example-1/terraform/lambda.tf).
 
-**Note that you only need to deploy the lambdas once and for all, even if you change your job configuration and your business logic.
-    This is made possible thanks to the way the Launcher works**
 ### 4. Deployment
 a. The easy way
 
