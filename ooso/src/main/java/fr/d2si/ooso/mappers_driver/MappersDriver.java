@@ -6,22 +6,29 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import fr.d2si.ooso.mapper_wrapper.MapperWrapperInfo;
+import fr.d2si.ooso.mappers_listener.MappersListenerInfo;
 import fr.d2si.ooso.utils.*;
 
 import java.util.List;
 
-public class MappersDriver implements RequestHandler<Void, String> {
+import static fr.d2si.ooso.utils.Commons.IGNORED_RETURN_VALUE;
+
+public class MappersDriver implements RequestHandler<MappersDriverInfo, String> {
 
     private AmazonS3 s3Client;
     private JobInfo jobInfo;
 
     private String jobId;
+    private MappersDriverInfo mappersDriverInfo;
 
     @Override
-    public String handleRequest(Void event, Context context) {
+    public String handleRequest(MappersDriverInfo mappersDriverInfo, Context context) {
         try {
+            this.mappersDriverInfo = mappersDriverInfo;
+
             this.s3Client = AmazonS3Provider.getS3Client();
-            this.jobInfo = JobInfoProvider.getJobInfo();
+
+            this.jobInfo = this.mappersDriverInfo.getJobInfo();
 
             this.jobId = this.jobInfo.getJobId();
 
@@ -39,7 +46,7 @@ public class MappersDriver implements RequestHandler<Void, String> {
             throw new RuntimeException(e);
         }
 
-        return "Ok";
+        return IGNORED_RETURN_VALUE;
     }
 
     private void cleanup() {
@@ -76,14 +83,23 @@ public class MappersDriver implements RequestHandler<Void, String> {
     }
 
     private void invokeMappersListener() {
-        Commons.invokeLambdaAsync(this.jobInfo.getMappersListenerFunctionName());
+        Commons.invokeLambdaAsync(
+                this.jobInfo.getMappersListenerFunctionName(),
+                new MappersListenerInfo(
+                        this.mappersDriverInfo.getReducerInBase64(),
+                        this.jobInfo));
     }
 
-    private void invokeMappers(List<List<ObjectInfoSimple>> batches) throws InterruptedException {
+    private void invokeMappers(List<List<ObjectInfoSimple>> batches) {
         int currentMapperId = 0;
 
         for (List<ObjectInfoSimple> batch : batches) {
-            MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(batch, currentMapperId++);
+            MapperWrapperInfo mapperWrapperInfo = new MapperWrapperInfo(
+                    batch,
+                    currentMapperId++,
+                    this.mappersDriverInfo.getMapperInBase64(),
+                    this.jobInfo);
+
             Commons.invokeLambdaAsync(this.jobInfo.getMapperFunctionName(), mapperWrapperInfo);
         }
     }

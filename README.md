@@ -3,9 +3,8 @@
 </p>
 
 [![Build Status](https://travis-ci.org/d2si-oss/ooso.svg?branch=master)](https://travis-ci.org/d2si-oss/ooso)
-<!--- 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/fr.d2-si/ooso/badge.svg)](https://search.maven.org/#artifactdetails%7Cfr.d2-si%7Cooso%7C0.0.3%7Cjar)
---->
+
 Ooso lets you run MapReduce jobs in a serverless way.
 It is based on managed cloud services, [Amazon S3](https://aws.amazon.com/s3/) and [AWS Lambda](https://aws.amazon.com/lambda/) and is mainly an alternative to standard ad-hoc querying and batch processing tools such as [Hadoop](http://hadoop.apache.org/) and [Spark](http://spark.apache.org/).
 
@@ -84,7 +83,7 @@ Declare the library dependency in the `pom.xml` file
         <dependency>
             <groupId>fr.d2-si</groupId>
             <artifactId>ooso</artifactId>
-            <version>0.0.3</version>
+            <version>0.0.4</version>
         </dependency>
     ...
     </dependencies>
@@ -126,7 +125,7 @@ Implement your `Mapper` and `Reducer`.
 Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details.
 ```json
 {
-  "jobId": "",
+  "jobId": "your_job_id",
   "jobInputBucket": "input",
   "mapperOutputBucket": "mapper-output",
   "reducerOutputBucket": "reducer-output",
@@ -148,7 +147,7 @@ Below is the description of some attributes (the rest is self explanatory).
 
 | Attribute| Description|
 |-------------|-------------|
-|jobId|Automatically set|
+|jobId|Used to identify a job|
 |jobInputBucket|Contains the dataset splits that each `Mapper` will process|
 |mapperOutputBucket|The bucket where the mappers will put their results|
 |reducerOutputBucket|The bucket where the reducers will put their results|
@@ -249,9 +248,16 @@ However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terrafo
 ___
 
 ## IV. Running the job
-All you need is to run the `mappers_driver` function
- ```
-aws lambda invoke --function-name mappers_driver --invocation-type Event /dev/null
+All you need is to create a class with a main method, instantiate a `Launcher` that points to your `Mapper` and `Reducer`, like this:
+ ```java
+public class LaunchJob {
+    public static void main(String[] args) {
+        new Launcher()
+                .withMapper(new Mapper())
+                .withReducer(new Reducer())
+                .launchJob();
+    }
+}
  ```
 
 ___

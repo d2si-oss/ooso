@@ -9,6 +9,10 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -17,7 +21,8 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class AWSLambdaAsyncMockClient implements AWSLambda {
-    private final static Gson GSON = new GsonBuilder().serializeNulls().setLenient().create();
+    private final static Gson GSON = new GsonBuilder().create();
+    private JobInfo jobInfo;
     private Map<String, String> lambdaHandlerMapping;
     private ErrorDetectingThreadPool threadPool;
 
@@ -25,9 +30,7 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
     public AWSLambdaAsyncMockClient() {
         lambdaHandlerMapping = new HashMap<>(6);
         threadPool = new ErrorDetectingThreadPool();
-
-        JobInfo jobInfo = JobInfoProvider.getJobInfo();
-
+        this.jobInfo = loadJobInfo();
         lambdaHandlerMapping.put(jobInfo.getMappersDriverFunctionName(), "fr.d2si.ooso.mappers_driver.MappersDriver");
         lambdaHandlerMapping.put(jobInfo.getReducersDriverFunctionName(), "fr.d2si.ooso.reducers_driver.ReducersDriver");
         lambdaHandlerMapping.put(jobInfo.getMapperFunctionName(), "fr.d2si.ooso.mapper_wrapper.MapperWrapper");
@@ -35,6 +38,17 @@ public class AWSLambdaAsyncMockClient implements AWSLambda {
         lambdaHandlerMapping.put(jobInfo.getMappersListenerFunctionName(), "fr.d2si.ooso.mappers_listener.MappersListener");
         lambdaHandlerMapping.put(jobInfo.getReducersListenerFunctionName(), "fr.d2si.ooso.reducers_listener.ReducersListener");
     }
+
+    private JobInfo loadJobInfo() {
+        try (InputStream driverInfoStream = getClass().getClassLoader().getResourceAsStream("jobInfo.json");
+             BufferedReader driverInfoReader = new BufferedReader(new InputStreamReader(driverInfoStream))) {
+            Gson gson = new Gson();
+            return gson.fromJson(driverInfoReader, JobInfo.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @Override
     public InvokeResult invoke(InvokeRequest invokeRequest) {
