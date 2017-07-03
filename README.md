@@ -137,7 +137,7 @@ Implement your `Mapper`, `Reducer` and `Launcher`:
     ```
 
 ### 4. Configuration file
-Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details.
+Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details:
 ```json
 {
   "jobId": "your-job-id",
@@ -238,6 +238,8 @@ Create the required lambdas with the following details:
 We assume that the project jar is located at `example-project/target/job.jar`.
 
 You may create the lambda functions using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./examples/ad-hoc-example-1/terraform/lambda.tf).
+
+**Note that you'll only need to deploy the lambdas once. You will be able to run all your jobs even if your business code changes without redeploying the infrastructure.**
 
 ### 4. Deployment
 a. The easy way
