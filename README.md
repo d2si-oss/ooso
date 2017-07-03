@@ -55,12 +55,11 @@ ___
 
 ## II. How to use the library
 ### 1. Project Structure
-The easiest way is to clone the repository and use the provided [example-project](example-project) directory which has the following structure:
+The easiest way is to clone the repository and use the provided [example project](./examples/ad-hoc-example-1) directory which has the following structure:
 
 ```
 .
 ├── package.sh
-├── generate_job_id.py
 ├── provide_job_info.py
 ├── pom.xml
 └── src
@@ -90,8 +89,8 @@ Declare the library dependency in the `pom.xml` file
 ```
 
 ### 3. Classes to implement
-Implement your `Mapper` and `Reducer`.
-- The class [Mapper](example-project/src/main/java/mapper/Mapper.java) is the implementation of your mappers. It must extend the `fr.d2si.ooso.mapper.MapperAbstract` class which looks like the following:
+Implement your `Mapper`, `Reducer` and `Launcher`:
+- The class [Mapper](examples/ad-hoc-example-1/src/main/java/mapper/Mapper.java) is the implementation of your mappers. It must extend the `fr.d2si.ooso.mapper.MapperAbstract` class which looks like the following:
     ```java
     public abstract class MapperAbstract {
         public abstract String map(BufferedReader objectBufferedReader);
@@ -99,7 +98,7 @@ Implement your `Mapper` and `Reducer`.
     ```
     The `map` method receives a `BufferedReader` as a parameter which is a reader of the batch part that the mapper lambda processes. The Reader closing is done internally for you.
 
-- The class [Reducer](example-project/src/main/java/reducer/Reducer.java) is the implementation of your reducers. It must extend the `fr.d2si.ooso.reducer.ReducerAbstract` class which looks like the following:
+- The class [Reducer](examples/ad-hoc-example-1/src/main/java/reducer/Reducer.java) is the implementation of your reducers. It must extend the `fr.d2si.ooso.reducer.ReducerAbstract` class which looks like the following:
     ```java
     public abstract class ReducerAbstract {
         public abstract String reduce(List<ObjectInfoSimple> batch);
@@ -120,12 +119,28 @@ Implement your `Mapper` and `Reducer`.
     }
     ```
     **For the reducer, you are responsible of closing the opened readers.**
+- The [Launcher](examples/ad-hoc-example-1/src/main/java/job/jobLauncher.java) is responsible of starting your job.
+    Under the hood, it serializes your `Mapper` and `Reducer` and sends them to your `Mappers Driver` which then propagates them to the rest of the lambdas.
+
+    All you need to do is to create a class with a main method and instantiate a `Launcher` that points to your `Mapper` and `Reducer`. Your class should look like this:
+    ```java
+    public class JobLauncher {
+        public static void main(String[] args) {
+            //setup your launcher
+            Launcher myLauncher = new Launcher()
+                                            .withMapper(new Mapper())
+                                            .withReducer(new Reducer());
+            //launch your job
+            myLauncher.launchJob();
+        }
+    }
+    ```
 
 ### 4. Configuration file
-Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details.
+Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details:
 ```json
 {
-  "jobId": "your_job_id",
+  "jobId": "your-job-id",
   "jobInputBucket": "input",
   "mapperOutputBucket": "mapper-output",
   "reducerOutputBucket": "reducer-output",
@@ -197,7 +212,7 @@ a. Create an IAM role with the following trust policy
 }
 ```
 
-You may create the IAM role using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console), the [command line](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-cli) or our [Terraform template](./example-project/terraform/lambda.tf).
+You may create the IAM role using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console), the [command line](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-cli) or our [Terraform template](./examples/ad-hoc-example-1/terraform/lambda.tf).
 
 b. Attach the following policies to your role
 
@@ -206,7 +221,7 @@ b. Attach the following policies to your role
 
 Note that these policies are too broad. You may use more fine-grained policies/roles for each lambda.
 
-You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html) or our [Terraform template](./example-project/terraform/lambda.tf).
+You may attach the policies using the [console](http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-using.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html) or our [Terraform template](./examples/ad-hoc-example-1/terraform/lambda.tf).
 
 ### 3. Lambda functions
 Create the required lambdas with the following details:
@@ -222,7 +237,9 @@ Create the required lambdas with the following details:
 
 We assume that the project jar is located at `example-project/target/job.jar`.
 
-You may attach the policies using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./example-project/terraform/lambda.tf).
+You may create the lambda functions using the [console](http://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html), the [command line](http://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html) or our [Terraform template](./examples/ad-hoc-example-1/terraform/lambda.tf).
+
+**Note that you'll only need to deploy the lambdas once. You will be able to run all your jobs even if your business code changes without redeploying the infrastructure.**
 
 ### 4. Deployment
 a. The easy way
@@ -248,18 +265,11 @@ However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terrafo
 ___
 
 ## IV. Running the job
-All you need is to create a class with a main method, instantiate a `Launcher` that points to your `Mapper` and `Reducer`, like this:
- ```java
-public class LaunchJob {
-    public static void main(String[] args) {
-        new Launcher()
-                .withMapper(new Mapper())
-                .withReducer(new Reducer())
-                .launchJob();
-    }
-}
- ```
-You are now ready to start the job by executing your main method.
+In order to run your job, you may execute the main method of the same jar that you used during the deployment. You may either execute it from your IDE or using the command line as follows:
+```bash
+    java -cp job.jar job.JobLauncher
+```
+
 ___
 
  <div>The logo is made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> and is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>

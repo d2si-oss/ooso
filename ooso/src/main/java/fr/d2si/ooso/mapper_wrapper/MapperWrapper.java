@@ -15,7 +15,6 @@ import static fr.d2si.ooso.utils.Commons.IGNORED_RETURN_VALUE;
 public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> {
     private MapperAbstract mapperLogic;
 
-    private AmazonS3 s3Client;
     private MapperWrapperInfo mapperWrapperInfo;
     private JobInfo jobInfo;
     private String jobId;
@@ -23,8 +22,6 @@ public class MapperWrapper implements RequestHandler<MapperWrapperInfo, String> 
     @Override
     public String handleRequest(MapperWrapperInfo mapperWrapperInfo, Context context) {
         try {
-            this.s3Client = AmazonS3Provider.getS3Client();
-
             this.mapperWrapperInfo = mapperWrapperInfo;
 
             this.jobInfo = this.mapperWrapperInfo.getJobInfo();

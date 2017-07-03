@@ -5,13 +5,15 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.google.gson.Gson;
 import fr.d2si.ooso.utils.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.List;
@@ -55,7 +57,7 @@ public class CommonUtilitiesTest {
         s3Client.createBucket(DUMMY_BUCKET_NAME);
 
         //putting test data in local s3 bucket
-        File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/test-data/250mb");
+        File dataDir = new File(new File("").getAbsoluteFile().getParent() + "/examples/ad-hoc-example-1/test-data/250mb");
         for (File file : dataDir.listFiles()) {
             Commons.storeObject(Commons.TEXT_TYPE, file, DUMMY_BUCKET_NAME, "data/" + file.getName());
         }
