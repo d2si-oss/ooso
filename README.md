@@ -284,7 +284,7 @@ For more info about Terraform, check [Terraform documentation](https://www.terra
 b. The less easy way
 
 You may use any deployment method you are familiar with. The AWS console, the AWS cli, python scripts, ...
-However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](aws.amazon.com/cloudformation‎).
+However we recommend using an Infrastructure-As-Code (IAC) tool such as [Terraform](https://www.terraform.io/) or [CloudFormation](https://aws.amazon.com/cloudformation).
 ___
 
 ## IV. Running the job
