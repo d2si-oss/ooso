@@ -135,6 +135,29 @@ Implement your `Mapper`, `Reducer` and `Launcher`:
         }
     }
     ```
+    In order to make our jar package executable, you need to set the main class that serves as the application entry point.
+
+    If you are using the maven shade plugin, you can do so as follows:
+    ```xml
+    <build>
+        ...
+            <plugins>
+                <plugin>
+                    ...
+                    <configuration>
+                        <transformers>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <mainClass>job.JobLauncher</mainClass>
+                            </transformer>
+                        </transformers>
+                    </configuration>
+                    ...
+                </plugin>
+            </plugins>
+        ...
+        </build>
+    ```
+    Please take a look at one of our example [pom.xml](./examples/ad-hoc-example-1/pom.xml) files for further details on how to configure your maven project.
 
 ### 4. Configuration file
 Edit the `jobInfo.json` file located at `src/main/resources` to reflect your [infrastructure](#iii-aws-infrastructure) details:
@@ -267,7 +290,7 @@ ___
 ## IV. Running the job
 In order to run your job, you may execute the main method of the same jar that you used during the deployment. You may either execute it from your IDE or using the command line as follows:
 ```bash
-    java -cp job.jar job.JobLauncher
+    java -jar job.jar
 ```
 
 ___
