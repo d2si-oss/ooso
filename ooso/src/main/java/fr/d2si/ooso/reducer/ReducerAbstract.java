@@ -6,5 +6,6 @@ import java.io.Serializable;
 import java.util.List;
 
 public abstract class ReducerAbstract implements Serializable {
+    private static final long serialVersionUID = 1L;
     public abstract String reduce(List<ObjectInfoSimple> batch);
 }

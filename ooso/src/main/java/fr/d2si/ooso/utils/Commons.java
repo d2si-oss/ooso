@@ -177,10 +177,14 @@ public final class Commons {
 
     public static Object base64ToObject(String objectInBase64) throws IOException, ClassNotFoundException {
         byte[] data = Base64.getDecoder().decode(objectInBase64);
-        ObjectInputStream ois = new ObjectInputStream(
-                new ByteArrayInputStream(data));
-        Object o = ois.readObject();
-        ois.close();
+//        ObjectInputStream ois = new ObjectInputStream(
+//                new ByteArrayInputStream(data));
+//        Object o = ois.readObject();
+//        ois.close();
+
+        DecompressibleInputStream inputStream = new DecompressibleInputStream(new ByteArrayInputStream(data));
+        Object o = inputStream.readObject();
+        inputStream.close();
         return o;
     }
 }

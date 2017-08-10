@@ -1,5 +1,6 @@
 package fr.d2si.ooso.launcher;
 
+import com.eaio.uuid.UUID;
 import com.google.gson.Gson;
 import fr.d2si.ooso.mapper.MapperAbstract;
 import fr.d2si.ooso.mappers_driver.MappersDriverInfo;
@@ -19,6 +20,8 @@ public class Launcher {
     private MapperAbstract mapper;
     private ReducerAbstract reducer;
 
+    private boolean generateId = false;
+
     private Logger logger;
 
     public Launcher withMapper(MapperAbstract mapper) {
@@ -31,19 +34,37 @@ public class Launcher {
         return this;
     }
 
-    public void launchJob() {
+    public Launcher withRandomId(boolean generateId) {
+        this.generateId = generateId;
+        return this;
+    }
+
+    public String launchJob() {
         try {
+            String generatedId = null;
+
             configureLogger();
             loadJobInfo();
+
+            if (generateId) {
+                generatedId = generateUUID().toString();
+                jobInfo.setJobId(generatedId);
+            }
 
             if (this.mapper == null || (!this.jobInfo.getDisableReducer() && reducer == null)) {
                 throw new RuntimeException("You must set the mapper and reducer classes");
             }
 
             launchMappersDriver();
+
+            return generatedId;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private UUID generateUUID() {
+        return new UUID();
     }
 
     private void configureLogger() {
